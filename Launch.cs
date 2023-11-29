@@ -12,7 +12,7 @@ namespace AdventofCode2023
         {
             bool endApp = false;
             // Display title as the C# console calculator app.
-            Console.WriteLine("Advent of Code 2023a in C#\r");
+            Console.WriteLine("Advent of Code 2023 in C#\r");
             Console.WriteLine("------------------------\n");
 
 
