@@ -2,111 +2,208 @@
 using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks.Sources;
+using Newtonsoft.Json.Linq;
 
 namespace AoC2023.solution
 {
     public class AoCDay2
     {
-
         public AoCDay2(int selectedPart, string input)
         {
-
             string[] lines = input.Split(
                 new string[] { Environment.NewLine },
                 StringSplitOptions.None
             );
-            int score = 0;
+
+
+
+            List<int> possibleGames = new List<int>();
+            int redCubes = 12; int greenCubes = 13; int blueCubes = 14; int idSum = 0;
 
             foreach (string line in lines)
             {
-                string[] moves = line.Split(' ');
-
-                if (moves[0].Equals("A") && moves[1].Equals("X")) // Rock vs Rock
+                int redCubesGame = 0; int greenCubesGame = 0; int blueCubesGame = 0;
+                string[] games = line.Split(':');
+                string gameName = games[0].Replace("Game ", "");
+                string[] sections = games[1].Split(';');
+                int possibleGame = 1;
+                foreach (string section in sections)
                 {
-                    score = score + 4;
+                    string[] cubes = section.Split(',');
+                    if (cubes.Count() < 1)
+                    {
+                        string cubeInfo = section.Trim();
+                        string[] cubeDetails = cubeInfo.Split(' ');
+                        if (cubeDetails[1] == "green")
+                        {
+                            greenCubesGame = greenCubesGame + Int32.Parse(cubeDetails[0]);
+                            if(Int32.Parse(cubeDetails[0]) > greenCubes)
+                            {
+                                possibleGame = 0;
+                            }
+                        }
+                        else if (cubeDetails[1] == "blue")
+                        {
+                            blueCubesGame = blueCubesGame + Int32.Parse(cubeDetails[0]);
+                            if (Int32.Parse(cubeDetails[0]) > blueCubes)
+                            {
+                                possibleGame = 0;
+                            }
+                        }
+                        else if (cubeDetails[1] == "red")
+                        {
+                            redCubesGame = redCubesGame + Int32.Parse(cubeDetails[0]);
+                            if (Int32.Parse(cubeDetails[0]) > redCubes)
+                            {
+                                possibleGame = 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (string cube in cubes)
+                        {
+                            string cubeInfo = cube.Trim();
+                            string[] cubeDetails = cubeInfo.Split(' ');
+                            if (cubeDetails[1] == "green")
+                            {
+                                greenCubesGame = greenCubesGame + Int32.Parse(cubeDetails[0]);
+                                if (Int32.Parse(cubeDetails[0]) > greenCubes)
+                                {
+                                    possibleGame = 0;
+                                }
+                            }
+                            else if (cubeDetails[1] == "blue")
+                            {
+                                blueCubesGame = blueCubesGame + Int32.Parse(cubeDetails[0]);
+                                if (Int32.Parse(cubeDetails[0]) > blueCubes)
+                                {
+                                    possibleGame = 0;
+                                }
+                            }
+                            else if (cubeDetails[1] == "red")
+                            {
+                                redCubesGame = redCubesGame + Int32.Parse(cubeDetails[0]);
+                                if (Int32.Parse(cubeDetails[0]) > redCubes)
+                                {
+                                    possibleGame = 0;
+                                }
+                            }
+                        }
+                    }
                 }
-                else if(moves[0].Equals("A") && moves[1].Equals("Y")) // Rock vs Paper
+                if (possibleGame > 0)
                 {
-                    score = score + 8;
+                    possibleGames.Add(Int32.Parse(gameName));
+                    Console.WriteLine("Adding game " + gameName + "\n");
                 }
-                else if(moves[0].Equals("A") && moves[1].Equals("Z")) // Rock vs Sciccors 
-                {
-                    score = score + 3;
-                }
-                else if(moves[0].Equals("B") && moves[1].Equals("X")) // Paper vs Rock
-                {
-                    score = score + 1;
-                }
-                else if(moves[0].Equals("B") && moves[1].Equals("Y")) // Paper vs Paper
-                {
-                    score = score + 5;
-                }
-                else if(moves[0].Equals("B") && moves[1].Equals("Z")) // Paper vs Sciccors 
-                {
-                    score = score + 9;
-                }
-                else if(moves[0].Equals("C") && moves[1].Equals("X")) // Sciccors vs Rock
-                {
-                    score = score + 7;
-                }
-                else if(moves[0].Equals("C") && moves[1].Equals("Y")) // Sciccors vs Paper
-                {
-                    score = score + 2;
-                }
-                else if (moves[0].Equals("C") && moves[1].Equals("Z")) // Sciccors vs Sciccors 
-                {
-                    score = score + 6;
-                }                
-
+                //if (redCubesGame <= redCubes && greenCubesGame <= greenCubes && blueCubesGame <= blueCubes)
+                //{
+                //    possibleGames.Add(Int32.Parse(gameName));
+                //}
             }
 
-            output = "Part A: " + score;
+            foreach (int possibleGame in possibleGames)
+            {
+                idSum = idSum + possibleGame;
+            }
 
-            score = 0;
+            output = "Part A: " + idSum;
+
+
+
+
+
+            List<int> possibleGamesSecond = new List<int>();
+            //int redCubes = 12; int greenCubes = 13; int blueCubes = 14;int idSum = 0;
+
             foreach (string line in lines)
             {
-                string[] moves = line.Split(' ');
+                int redCubesGame = 0; int greenCubesGame = 0; int blueCubesGame = 0;
+                string[] games = line.Split(':');
+                string gameName = games[0].Replace("Game ", "");
+                string[] sections = games[1].Split(';');
+                foreach (string section in sections)
+                {
+                    string[] cubes = section.Split(',');
+                    if(cubes.Count() < 1)
+                    {
+                        string cubeInfo = section.Trim();
+                        string[] cubeDetails = cubeInfo.Split(' ');
+                        if (cubeDetails[1] == "green")
+                        {
+                            if(Int32.Parse(cubeDetails[0]) > greenCubesGame)
+                            {
+                                greenCubesGame = Int32.Parse(cubeDetails[0]);
+                            }
+                            //greenCubesGame = greenCubesGame + Int32.Parse(cubeDetails[0]);
+                        }
+                        else if (cubeDetails[1] == "blue")
+                        {
+                            if (Int32.Parse(cubeDetails[0]) > blueCubesGame)
+                            {
+                                blueCubesGame = Int32.Parse(cubeDetails[0]);
+                            }
+                            //blueCubesGame = blueCubesGame + Int32.Parse(cubeDetails[0]);
+                        }
+                        else if (cubeDetails[1] == "red")
+                        {
+                            if (Int32.Parse(cubeDetails[0]) > redCubesGame)
+                            {
+                                redCubesGame = Int32.Parse(cubeDetails[0]);
+                            }
+                            //redCubesGame = redCubesGame + Int32.Parse(cubeDetails[0]);
+                        }
+                    } else
+                    {
+                        foreach (string cube in cubes)
+                        {
+                            string cubeInfo = cube.Trim();
+                            string[] cubeDetails = cubeInfo.Split(' ');
+                            if (cubeDetails[1]=="green")
+                            {
+                                if (Int32.Parse(cubeDetails[0]) > greenCubesGame)
+                                {
+                                    greenCubesGame = Int32.Parse(cubeDetails[0]);
+                                }
+                                //greenCubesGame = greenCubesGame + Int32.Parse(cubeDetails[0]);
+                            } else if (cubeDetails[1] == "blue")
+                            {
+                                if (Int32.Parse(cubeDetails[0]) > blueCubesGame)
+                                {
+                                    blueCubesGame = Int32.Parse(cubeDetails[0]);
+                                }
+                                //blueCubesGame = blueCubesGame + Int32.Parse(cubeDetails[0]);
+                            } else if (cubeDetails[1] == "red")
+                            {
+                                if (Int32.Parse(cubeDetails[0]) > redCubesGame)
+                                {
+                                    redCubesGame = Int32.Parse(cubeDetails[0]);
+                                }
+                                //redCubesGame = redCubesGame + Int32.Parse(cubeDetails[0]);
+                            }
+                        }
+                    }
+                }
+                int gamePower = 0;
+                gamePower = greenCubesGame * blueCubesGame * redCubesGame;
+                Console.WriteLine("Game power " + gamePower + "\n");
 
-                if (moves[0].Equals("A") && moves[1].Equals("X")) // Rock vs Rock (must lose)
-                {
-                    score = score + 3;
-                }
-                else if (moves[0].Equals("A") && moves[1].Equals("Y")) // Rock vs Paper (must draw)
-                {
-                    score = score + 4;
-                }
-                else if (moves[0].Equals("A") && moves[1].Equals("Z")) // Rock vs Sciccors (must win)
-                {
-                    score = score + 8;
-                }
-                else if (moves[0].Equals("B") && moves[1].Equals("X")) // Paper vs Rock (must lose)
-                {
-                    score = score + 1;
-                }
-                else if (moves[0].Equals("B") && moves[1].Equals("Y")) // Paper vs Paper (must draw)
-                {
-                    score = score + 5;
-                }
-                else if (moves[0].Equals("B") && moves[1].Equals("Z")) // Paper vs Sciccors (must win) 
-                {
-                    score = score + 9;
-                }
-                else if (moves[0].Equals("C") && moves[1].Equals("X")) // Sciccors vs Rock (must lose)
-                {
-                    score = score + 2;
-                }
-                else if (moves[0].Equals("C") && moves[1].Equals("Y")) // Sciccors vs Paper (must draw)
-                {
-                    score = score + 6;
-                }
-                else if (moves[0].Equals("C") && moves[1].Equals("Z")) // Sciccors vs Sciccors (must win)
-                {
-                    score = score + 7;
-                }
-
+                possibleGamesSecond.Add(gamePower);
+                
+            }
+            idSum = 0;
+            foreach (int possibleGame in possibleGamesSecond)
+            {
+                idSum = idSum + possibleGame;
             }
 
-            output += "\nPart B: " + score;
+            output += "\nPart B: " + idSum;
+
+
+            
+
+
 
         }
 
