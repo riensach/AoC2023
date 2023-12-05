@@ -223,29 +223,13 @@ namespace AoC2023.solution
 
             Dictionary<Int64, Int64> seedLocationsSecond = new Dictionary<Int64, Int64>();
 
-            foreach (Location locationItem in locationList)
+            foreach (Seed seedItem in seedList)
             {
                 Int64 seedLenth = seedItem.SeedEnd - seedItem.SeedStart;
                 Console.WriteLine("Starting on seeds : " + seedItem.SeedStart + " with a length of "+ seedLenth+" seeds \n");
                 for (Int64 seed = seedItem.SeedStart; seed <= seedItem.SeedEnd; seed++)
                 {
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+                                        
                     Int64 soilFoundValue = 999999999999;
                     var soilMaps = mapList.Where(p => p.MapType == "seed-to-soil").ToList();
                     foreach (Map soilMap in soilMaps)
