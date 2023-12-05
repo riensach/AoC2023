@@ -10,11 +10,17 @@ using static AoC2023.solution.AoCDay5;
 using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
 using LoreSoft.MathExpressions;
+using Windows.Data.Xml.Dom;
+using System.Collections.Generic;
 
 namespace AoC2023.solution
 {
     public class AoCDay5
     {
+        public Int64 seedLocationsSecondKey = 999999999999;
+        public Int64 seedLocationsSecondValue = 999999999999;
+
+
 
         public AoCDay5(int selectedPart, string input)
         {
@@ -211,32 +217,17 @@ namespace AoC2023.solution
             Console.WriteLine("Part A:" + minValue);
 
             Dictionary<Int64, Int64> seedLocationsSecond = new Dictionary<Int64, Int64>();
-            Int64 seedLocationsSecondKey = 999999999999;
-            Int64 seedLocationsSecondValue = 999999999999;
+            
 
             foreach (Seed seedItem in seedList)
             {
                 Int64 seedLenth = seedItem.SeedEnd - seedItem.SeedStart;
                 Console.WriteLine("Starting on seeds : " + seedItem.SeedStart + " with a length of "+ seedLenth+" seeds \n");
-                for (Int64 seed = seedItem.SeedStart; seed <= seedItem.SeedEnd; seed++)
-                {
-                    
-                        // Task to be executed by a thread from the pool
-                        //Console.WriteLine("Added "+seed+" to the thread pool.\n");
-                        Int64 locationFoundValue = findLocation(seed);
-                        //seedLocationsSecond.Add(seed, locationFoundValue);
-                        if(locationFoundValue < seedLocationsSecondValue)
-                        {
-                            seedLocationsSecondKey = seed;
-                            seedLocationsSecondValue = locationFoundValue;
-                        }
+                //Thread workerThread = new Thread(processSeeds(seedItem.SeedStart, seedItem.SeedEnd));
+
+                processSeeds(seedItem.SeedStart, seedItem.SeedEnd);
 
 
-
-
-
-                    //Console.WriteLine("Seed " + seed + ", soil " + soilFoundValue + ", fertilizer " + fertilizerFoundValue + ", water " + waterFoundValue + ", light " + lightFoundValue + ", temperature " + temperatureFoundValue + ", humidity " + humidityFoundValue + ", location " + locationFoundValue + "\n");
-                }
             }
             foreach (var month in seedLocations)
             {
@@ -247,11 +238,45 @@ namespace AoC2023.solution
 
             Console.WriteLine("\nPart B:" + minValueSecond);
 
-            Int64 findLocation(Int64 seed)
+            void processSeeds(Int64 seedStart, Int64 seedEnd)
+            {
+                var soilMaps = mapList.Where(p => p.MapType == "seed-to-soil").ToList();
+                var fertilizerMaps = mapList.Where(p => p.MapType == "soil-to-fertilizer").ToList();
+                var waterMaps = mapList.Where(p => p.MapType == "fertilizer-to-water").ToList();
+                var lightMaps = mapList.Where(p => p.MapType == "water-to-light").ToList();
+                var temperatureMaps = mapList.Where(p => p.MapType == "light-to-temperature").ToList();
+                var humidityMaps = mapList.Where(p => p.MapType == "temperature-to-humidity").ToList();
+                var locationMaps = mapList.Where(p => p.MapType == "humidity-to-location").ToList();
+                for (Int64 seed = seedStart; seed <= seedEnd; seed++)
+                {
+
+                    // Task to be executed by a thread from the pool
+                    //Console.WriteLine("Added "+seed+" to the thread pool.\n");
+                    
+                    Int64 locationFoundValue = findLocation(seed, soilMaps, fertilizerMaps, waterMaps, lightMaps, temperatureMaps, humidityMaps, locationMaps);
+                    //seedLocationsSecond.Add(seed, locationFoundValue);
+                    if (locationFoundValue < seedLocationsSecondValue)
+                    {
+                        seedLocationsSecondKey = seed;
+                        seedLocationsSecondValue = locationFoundValue;
+                    }
+
+
+                    if(seed % 1000000 == 0)
+                    {
+                        Console.WriteLine("Done " + seed + " seeds.\n");
+                    }
+
+
+                    //Console.WriteLine("Seed " + seed + ", soil " + soilFoundValue + ", fertilizer " + fertilizerFoundValue + ", water " + waterFoundValue + ", light " + lightFoundValue + ", temperature " + temperatureFoundValue + ", humidity " + humidityFoundValue + ", location " + locationFoundValue + "\n");
+                }
+            }
+            
+            Int64 findLocation(Int64 seed, List<Map> soilMaps, List<Map> fertilizerMaps, List<Map> waterMaps, List<Map> lightMaps, List<Map> temperatureMaps, List<Map> humidityMaps, List<Map> locationMaps)
             {
 
                 Int64 soilFoundValue = 999999999999;
-                var soilMaps = mapList.Where(p => p.MapType == "seed-to-soil").ToList();
+                
                 foreach (Map soilMap in soilMaps)
                 {
                     if (soilMap.destinationExists(seed))
@@ -266,7 +291,6 @@ namespace AoC2023.solution
                 }
                 if (soilFoundValue == 999999999999) soilFoundValue = seed;
                 Int64 fertilizerFoundValue = 999999999999;
-                var fertilizerMaps = mapList.Where(p => p.MapType == "soil-to-fertilizer").ToList();
                 foreach (Map fertilizerMap in fertilizerMaps)
                 {
                     if (fertilizerMap.destinationExists(soilFoundValue))
@@ -281,7 +305,6 @@ namespace AoC2023.solution
                 }
                 if (fertilizerFoundValue == 999999999999) fertilizerFoundValue = soilFoundValue;
                 Int64 waterFoundValue = 999999999999;
-                var waterMaps = mapList.Where(p => p.MapType == "fertilizer-to-water").ToList();
                 foreach (Map waterMap in waterMaps)
                 {
                     if (waterMap.destinationExists(fertilizerFoundValue))
@@ -296,7 +319,6 @@ namespace AoC2023.solution
                 }
                 if (waterFoundValue == 999999999999) waterFoundValue = fertilizerFoundValue;
                 Int64 lightFoundValue = 999999999999;
-                var lightMaps = mapList.Where(p => p.MapType == "water-to-light").ToList();
                 foreach (Map lightMap in lightMaps)
                 {
                     if (lightMap.destinationExists(waterFoundValue))
@@ -311,7 +333,6 @@ namespace AoC2023.solution
                 }
                 if (lightFoundValue == 999999999999) lightFoundValue = waterFoundValue;
                 Int64 temperatureFoundValue = 999999999999;
-                var temperatureMaps = mapList.Where(p => p.MapType == "light-to-temperature").ToList();
                 foreach (Map temperatureMap in temperatureMaps)
                 {
                     if (temperatureMap.destinationExists(lightFoundValue))
@@ -326,7 +347,6 @@ namespace AoC2023.solution
                 }
                 if (temperatureFoundValue == 999999999999) temperatureFoundValue = lightFoundValue;
                 Int64 humidityFoundValue = 999999999999;
-                var humidityMaps = mapList.Where(p => p.MapType == "temperature-to-humidity").ToList();
                 foreach (Map humidityMap in humidityMaps)
                 {
                     if (humidityMap.destinationExists(temperatureFoundValue))
@@ -341,7 +361,6 @@ namespace AoC2023.solution
                 }
                 if (humidityFoundValue == 999999999999) humidityFoundValue = temperatureFoundValue;
                 Int64 locationFoundValue = 999999999999;
-                var locationMaps = mapList.Where(p => p.MapType == "humidity-to-location").ToList();
                 foreach (Map locationMap in locationMaps)
                 {
                     if (locationMap.destinationExists(humidityFoundValue))
