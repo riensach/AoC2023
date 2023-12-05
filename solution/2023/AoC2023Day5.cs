@@ -9,6 +9,7 @@ using System.ComponentModel;
 using static AoC2023.solution.AoCDay5;
 using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
+using LoreSoft.MathExpressions;
 
 namespace AoC2023.solution
 {
@@ -209,19 +210,9 @@ namespace AoC2023.solution
 
             Console.WriteLine("Part A:" + minValue);
 
-
-
-
-
-
-
-
-
-
-
-
-
             Dictionary<Int64, Int64> seedLocationsSecond = new Dictionary<Int64, Int64>();
+            Int64 seedLocationsSecondKey = 999999999999;
+            Int64 seedLocationsSecondValue = 999999999999;
 
             foreach (Seed seedItem in seedList)
             {
@@ -229,116 +220,21 @@ namespace AoC2023.solution
                 Console.WriteLine("Starting on seeds : " + seedItem.SeedStart + " with a length of "+ seedLenth+" seeds \n");
                 for (Int64 seed = seedItem.SeedStart; seed <= seedItem.SeedEnd; seed++)
                 {
-                                        
-                    Int64 soilFoundValue = 999999999999;
-                    var soilMaps = mapList.Where(p => p.MapType == "seed-to-soil").ToList();
-                    foreach (Map soilMap in soilMaps)
-                    {
-                        if (soilMap.destinationExists(seed))
+                    
+                        // Task to be executed by a thread from the pool
+                        //Console.WriteLine("Added "+seed+" to the thread pool.\n");
+                        Int64 locationFoundValue = findLocation(seed);
+                        //seedLocationsSecond.Add(seed, locationFoundValue);
+                        if(locationFoundValue < seedLocationsSecondValue)
                         {
-                            //soilFoundValue = soilMap.findDestination(seed);
-                            Int64 tempVal = soilMap.findDestination(seed);
-                            if (tempVal != seed && tempVal < soilFoundValue)
-                            {
-                                soilFoundValue = tempVal;
-                            }
+                            seedLocationsSecondKey = seed;
+                            seedLocationsSecondValue = locationFoundValue;
                         }
-                    }
-                    if (soilFoundValue == 999999999999) soilFoundValue = seed;
-                    Int64 fertilizerFoundValue = 999999999999;
-                    var fertilizerMaps = mapList.Where(p => p.MapType == "soil-to-fertilizer").ToList();
-                    foreach (Map fertilizerMap in fertilizerMaps)
-                    {
-                        if (fertilizerMap.destinationExists(soilFoundValue))
-                        {
-                            //fertilizerFoundValue = fertilizerMap.findDestination(soilFoundValue);
-                            Int64 tempVal = fertilizerMap.findDestination(soilFoundValue);
-                            if (tempVal != soilFoundValue && tempVal < fertilizerFoundValue)
-                            {
-                                fertilizerFoundValue = tempVal;
-                            }
-                        }
-                    }
-                    if (fertilizerFoundValue == 999999999999) fertilizerFoundValue = soilFoundValue;
-                    Int64 waterFoundValue = 999999999999;
-                    var waterMaps = mapList.Where(p => p.MapType == "fertilizer-to-water").ToList();
-                    foreach (Map waterMap in waterMaps)
-                    {
-                        if (waterMap.destinationExists(fertilizerFoundValue))
-                        {
-                            //waterFoundValue = waterMap.findDestination(fertilizerFoundValue);
-                            Int64 tempVal = waterMap.findDestination(fertilizerFoundValue);
-                            if (tempVal != fertilizerFoundValue && tempVal < waterFoundValue)
-                            {
-                                waterFoundValue = tempVal;
-                            }
-                        }
-                    }
-                    if (waterFoundValue == 999999999999) waterFoundValue = fertilizerFoundValue;
-                    Int64 lightFoundValue = 999999999999;
-                    var lightMaps = mapList.Where(p => p.MapType == "water-to-light").ToList();
-                    foreach (Map lightMap in lightMaps)
-                    {
-                        if (lightMap.destinationExists(waterFoundValue))
-                        {
-                            //lightFoundValue = lightMap.findDestination(waterFoundValue);
-                            Int64 tempVal = lightMap.findDestination(waterFoundValue);
-                            if (tempVal != waterFoundValue && tempVal < lightFoundValue)
-                            {
-                                lightFoundValue = tempVal;
-                            }
-                        }
-                    }
-                    if (lightFoundValue == 999999999999) lightFoundValue = waterFoundValue;
-                    Int64 temperatureFoundValue = 999999999999;
-                    var temperatureMaps = mapList.Where(p => p.MapType == "light-to-temperature").ToList();
-                    foreach (Map temperatureMap in temperatureMaps)
-                    {
-                        if (temperatureMap.destinationExists(lightFoundValue))
-                        {
-                            Int64 tempVal = temperatureMap.findDestination(lightFoundValue);
-                            if (tempVal != lightFoundValue && tempVal < temperatureFoundValue)
-                            {
-                                temperatureFoundValue = tempVal;
-
-                            }
-                        }
-                    }
-                    if (temperatureFoundValue == 999999999999) temperatureFoundValue = lightFoundValue;
-                    Int64 humidityFoundValue = 999999999999;
-                    var humidityMaps = mapList.Where(p => p.MapType == "temperature-to-humidity").ToList();
-                    foreach (Map humidityMap in humidityMaps)
-                    {
-                        if (humidityMap.destinationExists(temperatureFoundValue))
-                        {
-                            //humidityFoundValue = humidityMap.findDestination(temperatureFoundValue);
-                            Int64 tempVal = humidityMap.findDestination(temperatureFoundValue);
-                            if (tempVal != temperatureFoundValue && tempVal < humidityFoundValue)
-                            {
-                                humidityFoundValue = tempVal;
-                            }
-                        }
-                    }
-                    if (humidityFoundValue == 999999999999) humidityFoundValue = temperatureFoundValue;
-                    Int64 locationFoundValue = 999999999999;
-                    var locationMaps = mapList.Where(p => p.MapType == "humidity-to-location").ToList();
-                    foreach (Map locationMap in locationMaps)
-                    {
-                        if (locationMap.destinationExists(humidityFoundValue))
-                        {
-                            //locationFoundValue = locationMap.findDestination(humidityFoundValue);
-                            Int64 tempVal = locationMap.findDestination(humidityFoundValue);
-                            if (tempVal != humidityFoundValue && tempVal < locationFoundValue)
-                            {
-                                locationFoundValue = tempVal;
-                            }
-                        }
-                    }
-                    if (locationFoundValue == 999999999999) locationFoundValue = humidityFoundValue;
 
 
 
-                    seedLocationsSecond.Add(seed, locationFoundValue);
+
+
                     //Console.WriteLine("Seed " + seed + ", soil " + soilFoundValue + ", fertilizer " + fertilizerFoundValue + ", water " + waterFoundValue + ", light " + lightFoundValue + ", temperature " + temperatureFoundValue + ", humidity " + humidityFoundValue + ", location " + locationFoundValue + "\n");
                 }
             }
@@ -346,13 +242,126 @@ namespace AoC2023.solution
             {
                 //Console.WriteLine("SeedtoSoil: " +month+"\n");
             }
-            Int64 minKeySecond = seedLocationsSecond.Min(x => x.Key);
-            Int64 minValueSecond = seedLocationsSecond.Min(x => x.Value);
+            Int64 minKeySecond = seedLocationsSecondKey;
+            Int64 minValueSecond = seedLocationsSecondValue;
 
             Console.WriteLine("\nPart B:" + minValueSecond);
 
+            Int64 findLocation(Int64 seed)
+            {
+
+                Int64 soilFoundValue = 999999999999;
+                var soilMaps = mapList.Where(p => p.MapType == "seed-to-soil").ToList();
+                foreach (Map soilMap in soilMaps)
+                {
+                    if (soilMap.destinationExists(seed))
+                    {
+                        //soilFoundValue = soilMap.findDestination(seed);
+                        Int64 tempVal = soilMap.findDestination(seed);
+                        if (tempVal != seed && tempVal < soilFoundValue)
+                        {
+                            soilFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (soilFoundValue == 999999999999) soilFoundValue = seed;
+                Int64 fertilizerFoundValue = 999999999999;
+                var fertilizerMaps = mapList.Where(p => p.MapType == "soil-to-fertilizer").ToList();
+                foreach (Map fertilizerMap in fertilizerMaps)
+                {
+                    if (fertilizerMap.destinationExists(soilFoundValue))
+                    {
+                        //fertilizerFoundValue = fertilizerMap.findDestination(soilFoundValue);
+                        Int64 tempVal = fertilizerMap.findDestination(soilFoundValue);
+                        if (tempVal != soilFoundValue && tempVal < fertilizerFoundValue)
+                        {
+                            fertilizerFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (fertilizerFoundValue == 999999999999) fertilizerFoundValue = soilFoundValue;
+                Int64 waterFoundValue = 999999999999;
+                var waterMaps = mapList.Where(p => p.MapType == "fertilizer-to-water").ToList();
+                foreach (Map waterMap in waterMaps)
+                {
+                    if (waterMap.destinationExists(fertilizerFoundValue))
+                    {
+                        //waterFoundValue = waterMap.findDestination(fertilizerFoundValue);
+                        Int64 tempVal = waterMap.findDestination(fertilizerFoundValue);
+                        if (tempVal != fertilizerFoundValue && tempVal < waterFoundValue)
+                        {
+                            waterFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (waterFoundValue == 999999999999) waterFoundValue = fertilizerFoundValue;
+                Int64 lightFoundValue = 999999999999;
+                var lightMaps = mapList.Where(p => p.MapType == "water-to-light").ToList();
+                foreach (Map lightMap in lightMaps)
+                {
+                    if (lightMap.destinationExists(waterFoundValue))
+                    {
+                        //lightFoundValue = lightMap.findDestination(waterFoundValue);
+                        Int64 tempVal = lightMap.findDestination(waterFoundValue);
+                        if (tempVal != waterFoundValue && tempVal < lightFoundValue)
+                        {
+                            lightFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (lightFoundValue == 999999999999) lightFoundValue = waterFoundValue;
+                Int64 temperatureFoundValue = 999999999999;
+                var temperatureMaps = mapList.Where(p => p.MapType == "light-to-temperature").ToList();
+                foreach (Map temperatureMap in temperatureMaps)
+                {
+                    if (temperatureMap.destinationExists(lightFoundValue))
+                    {
+                        Int64 tempVal = temperatureMap.findDestination(lightFoundValue);
+                        if (tempVal != lightFoundValue && tempVal < temperatureFoundValue)
+                        {
+                            temperatureFoundValue = tempVal;
+
+                        }
+                    }
+                }
+                if (temperatureFoundValue == 999999999999) temperatureFoundValue = lightFoundValue;
+                Int64 humidityFoundValue = 999999999999;
+                var humidityMaps = mapList.Where(p => p.MapType == "temperature-to-humidity").ToList();
+                foreach (Map humidityMap in humidityMaps)
+                {
+                    if (humidityMap.destinationExists(temperatureFoundValue))
+                    {
+                        //humidityFoundValue = humidityMap.findDestination(temperatureFoundValue);
+                        Int64 tempVal = humidityMap.findDestination(temperatureFoundValue);
+                        if (tempVal != temperatureFoundValue && tempVal < humidityFoundValue)
+                        {
+                            humidityFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (humidityFoundValue == 999999999999) humidityFoundValue = temperatureFoundValue;
+                Int64 locationFoundValue = 999999999999;
+                var locationMaps = mapList.Where(p => p.MapType == "humidity-to-location").ToList();
+                foreach (Map locationMap in locationMaps)
+                {
+                    if (locationMap.destinationExists(humidityFoundValue))
+                    {
+                        //locationFoundValue = locationMap.findDestination(humidityFoundValue);
+                        Int64 tempVal = locationMap.findDestination(humidityFoundValue);
+                        if (tempVal != humidityFoundValue && tempVal < locationFoundValue)
+                        {
+                            locationFoundValue = tempVal;
+                        }
+                    }
+                }
+                if (locationFoundValue == 999999999999) locationFoundValue = humidityFoundValue;
+
+                return locationFoundValue;
+            }
 
         }
+
+        
 
         public string output;
         public class Map
