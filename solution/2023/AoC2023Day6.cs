@@ -9,41 +9,56 @@ namespace AoC2023.solution
 
         public AoCDay6(int selectedPart, string input)
         {
-            List<string> charList = new List<string>();
-            //input = "mjqjpqmgbljsphdztnvjfqwrcgsmlb";
-            foreach (var character in input)
+
+            string[] lines = input.Split(
+                new string[] { Environment.NewLine },
+                StringSplitOptions.None
+            );
+
+            Dictionary<Int64, Int64> raceRecords = new Dictionary<Int64, Int64>();
+            // Test
+            //raceRecords.Add(7,9);
+            //raceRecords.Add(15,40);
+            //raceRecords.Add(30,200);
+
+            // Input
+
+            //raceRecords.Add(46,347);
+            //raceRecords.Add(82,1522);
+            //raceRecords.Add(84,1406);
+            //raceRecords.Add(79,1471);
+
+            //raceRecords.Add(71530, 940200);
+
+            raceRecords.Add(46828479, 347152214061471);
+
+
+            List<int> raceWinsList = new List<int>();
+            foreach (KeyValuePair<Int64, Int64> raceRecord in raceRecords)
             {
-                charList.Add(character.ToString());
-            }
-            int marker = 0;
-            int markerB = 0;
-            for (int i = 0; i <= charList.Count(); i++)
-            {
-                List<string> tempList = new List<string> { charList[i], charList[i+1], charList[i+2], charList[i+3] };
-                bool isUnique = tempList.Distinct().Count() == tempList.Count();
-                if(isUnique)
+                int raceWins = 0;     
+                for (int i = 0; i <= raceRecord.Key; i++)
                 {
-                    marker = i+4;
-                    break;
+                    int totalCharge = i;
+                    Int64 totalDistance = i * (raceRecord.Key - i);
+
+                    if (totalDistance > raceRecord.Value)
+                    {
+                        //Console.WriteLine("winner");
+                        raceWins++;
+                    }
                 }
+                Console.WriteLine("Race " + raceRecord.Key + " race wins: " + raceWins + "\n");
+                raceWinsList.Add(raceWins);
             }
 
-            for (int i = 0; i <= charList.Count(); i++)
+            //129470400 wrong
+            Int64 finalCalculation = 1;
+            foreach (int raceWins in raceWinsList)
             {
-                List<string> tempList = new List<string> { charList[i], charList[i + 1], charList[i + 2], charList[i + 3], charList[i + 4], charList[i + 5], charList[i + 6], charList[i + 7], charList[i + 8], charList[i + 9], charList[i + 10], charList[i + 11], charList[i + 12], charList[i + 13] };
-                bool isUnique = tempList.Distinct().Count() == tempList.Count();
-                if (isUnique)
-                {
-                    markerB = i + 14;
-                    break;
-                }
+                finalCalculation = finalCalculation * raceWins;
             }
-
-
-
-
-            output = "Part A: " + marker;
-            output += "\nPart B: " + markerB;
+            output = "Part A: " + finalCalculation;
 
 
         }
