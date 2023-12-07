@@ -7,6 +7,11 @@ using System.Linq;
 using System.Collections.Immutable;
 using static AoC2023.solution.AoCDay7;
 using System.Xml.Linq;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Collections;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace AoC2023.solution
 {
@@ -19,297 +24,377 @@ namespace AoC2023.solution
                 new string[] { Environment.NewLine },
                 StringSplitOptions.None
             );
-            TreeNode<string> root = new TreeNode<string>("/");
-            TreeNode<string> currentNode = root;
+            Dictionary<string, int> hands = new Dictionary<string, int>();
+            Dictionary<string, int> handsValue = new Dictionary<string, int>();
+            Dictionary<string, int> cardScoringTable =
+                new Dictionary<string, int>
+                {{"1",1},{"2",2},{"3",3},{"4",4},
+                {"5",5},{"6",6},{"7",7},{"8",8},{"9",9},
+                {"10",10},{"T",11},
+                {"J",1},{"Q",13},{"K",14},{"A",15}};
 
             foreach (string line in lines)
             {
                 string[] commands = line.Split(' ');
-                if (commands[0] == "dir")
+                hands.Add(commands[0], Int32.Parse(commands[1]));
+            }
+
+            List<Hand> handList = new List<Hand>();
+
+            foreach (KeyValuePair<string, int> hand in hands)
+            {
+                Dictionary<string, int> cardValues = new Dictionary<string, int>();
+                foreach (var character in hand.Key)
                 {
-                    // This is listing an available directory, so we must create it
-                    //TreeNode<string> node = new TreeNode<string>(commands[1]);
-                    currentNode.AddChild(commands[1]);
-                }
-                else if (commands[0] == "$" && commands[1] == "ls")
-                {
-                    // The next few items are just going to be files/directorys in this directory
-                }
-                else if (commands[1] == "cd" && commands[2] == "..")
-                {
-                    // This will be a change directory - go up one level
-                    //System.Console.WriteLine("got here1");
-                    currentNode = currentNode.Parent;
-                }
-                else if (commands[1] == "cd")
-                {
-                    // This will be a change directory - go down one level
-                    //currentNode = currentNode.Children.;
-                    foreach (TreeNode<string> child in currentNode.Children)
+                    if (cardValues.ContainsKey(character.ToString()))
                     {
-                        //System.Console.WriteLine("got here3");
-                        //get child node here
-                        if (child.Value == commands[2])
-                        {
-                            //System.Console.WriteLine("got here");
-                            currentNode = child;
-                        }
+                        cardValues[character.ToString()] = cardValues[character.ToString()] + 1;
+                    }
+                    else
+                    {
+                        cardValues.Add(character.ToString(), 1);
                     }
                 }
-                else
+
+                int handType = 0;
+                if (cardValues.Count() == 1)
                 {
-                    // This will be a file size then a file name
-                    string fileSize = commands[0];
-                    string fileName = commands[1];
-                    currentNode.AddChild(fileSize);
+                    // Five of a kind - 10000000
+                    handType = 7;
+                }
+                else if (cardValues.Count() == 2 && (cardValues.First().Value == 4 || cardValues.Last().Value == 4))
+                {
+                    //Four of a kind - 1000000
+                    if(cardValues.First().Key == "J" || cardValues.Last().Key == "J")
+                    {
+                        handType = 7;
+                    } else
+                    {
+                        handType = 6;
+                    }
+                        
+                }
+                else if (cardValues.Count() == 2 && (cardValues.First().Value == 3 || cardValues.Last().Value == 3))
+                {
+                    //Full House - 100000
+                    if (cardValues.First().Key == "J" || cardValues.Last().Key == "J")
+                    {
+                        handType = 7;
+                    } 
+                    else
+                    {
+                        handType = 5;
+                    }
+                }
+                else if (cardValues.Count() == 3 && (cardValues.First().Value == 3 || cardValues.Last().Value == 3 || cardValues.ElementAt(1).Value == 3) && (cardValues.First().Value == 1 || cardValues.Last().Value == 1 || cardValues.ElementAt(1).Value == 1))
+                {
+                    //Three of a kind - 10000
+                    if (cardValues.First().Key == "J" || cardValues.Last().Key == "J" || cardValues.ElementAt(1).Key == "J")
+                    {
+                        handType = 6;
+                    }
+                    else
+                    {
+                        handType = 4;
+                    }
+                }
+                else if (cardValues.Count() == 3 && (cardValues.First().Value == 2 || cardValues.Last().Value == 2 || cardValues.ElementAt(1).Value == 2) && (cardValues.First().Value == 1 || cardValues.Last().Value == 1 || cardValues.ElementAt(1).Value == 1))
+                {
+                    //Two Pair - 1000
+                    if ((cardValues.First().Key == "J" && cardValues.First().Value == 2) || (cardValues.Last().Key == "J" && cardValues.Last().Value == 2) || (cardValues.ElementAt(1).Key == "J" && cardValues.ElementAt(1).Value == 2))
+                    {
+                        handType = 6;
+                    }
+                    else if ((cardValues.First().Key == "J" && cardValues.First().Value == 1) || (cardValues.Last().Key == "J" && cardValues.Last().Value == 1) || (cardValues.ElementAt(1).Key == "J" && cardValues.ElementAt(1).Value == 1))
+                    {
+                        handType = 5;
+                    }
+                    else
+                    {
+                        handType = 3;
+                    }
+                }
+                else if (cardValues.Count() == 4)
+                {
+                    //One Pair - 100
+                    if (cardValues.First().Key == "J" || cardValues.Last().Key == "J"|| cardValues.ElementAt(1).Key == "J" || cardValues.ElementAt(2).Key == "J")
+                    {
+                        handType = 4;
+                    }
+                    else
+                    {
+                        handType = 2;
+                    }
+                }
+                else if (cardValues.Count() == 5)
+                {
+                    //High Card - 1
+                    if (cardValues.First().Key == "J" || cardValues.Last().Key == "J" || cardValues.ElementAt(1).Key == "J" || cardValues.ElementAt(2).Key == "J" || cardValues.ElementAt(3).Key == "J")
+                    {
+                        handType = 2;
+                    }
+                    else
+                    {
+                        handType = 1;
+                    }
+                }
+
+                handList.Add(new Hand()
+                {
+                    hand = hand.Key,
+                    handType = handType,
+                    handBid = hand.Value,
+                    card1 = cardScoringTable[hand.Key.ElementAt(0).ToString().ToUpper()],
+                    card2 = cardScoringTable[hand.Key.ElementAt(1).ToString().ToUpper()],
+                    card3 = cardScoringTable[hand.Key.ElementAt(2).ToString().ToUpper()],
+                    card4 = cardScoringTable[hand.Key.ElementAt(3).ToString().ToUpper()],
+                    card5 = cardScoringTable[hand.Key.ElementAt(4).ToString().ToUpper()]
+                });
+            }
+            foreach (Hand seedItem in handList)
+            {
+                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(seedItem))
+                {
+                    string name = descriptor.Name;
+                    object value = descriptor.GetValue(seedItem);
+                    Console.WriteLine("{0}={1}", name, value);
                 }
             }
 
-
-            printNode(root);
-            int rootNodeSize = nodeSize(root);
-            int tempSize;
-            int sumSize = 0;
-
-            //root.Traverse(nodeSize(child));
-
-
-            List<int> directorySizes = new List<int>();
-
-            foreach (TreeNode<string> child in root.Children)
+            var handLists = handList.OrderBy(p => p.handType).ThenBy(s => s.card1).ThenBy(s => s.card2).ThenBy(s => s.card3).ThenBy(s => s.card4).ThenBy(s => s.card5).ToList();
+            int i = 1;
+            int totalScore = 0;
+            foreach (Hand handListItem in handLists)
             {
-                int numericValue;
-                bool isNumber = int.TryParse(child.Value, out numericValue);
-                if (!isNumber)
-                {
-                    tempSize = nodeSize(child);
-                    if (tempSize <= 100000)
-                    {
-                        sumSize = sumSize + tempSize;
-                    }
-                    directorySizes.Add(tempSize);
-
-                    foreach (TreeNode<string> child2 in child.Children)
-                    {
-                        isNumber = int.TryParse(child2.Value, out numericValue);
-                        if (!isNumber)
+                Console.WriteLine("Scoring hand " + handListItem.hand + " with the hand score of " + handListItem.handBid + "\n");
+                totalScore = totalScore + (handListItem.handBid * i);
+                i++;
+            }
+            output = "Part A: " + totalScore;
+            // wrong 254902501
+            /*
+                        foreach (KeyValuePair<string, int> hand in hands)
                         {
-                            tempSize = nodeSize(child2);
-                            if (tempSize <= 100000)
-                            {
-                                sumSize = sumSize + tempSize;
-                            }
-                            directorySizes.Add(tempSize);
 
-                            foreach (TreeNode<string> child3 in child2.Children)
+                            Dictionary<string, int> cardValues = new Dictionary<string, int>();
+                            foreach (var character in hand.Key)
                             {
-                                isNumber = int.TryParse(child3.Value, out numericValue);
-                                if (!isNumber)
+                                if (cardValues.ContainsKey(character.ToString()))
                                 {
-                                    tempSize = nodeSize(child3);
-                                    if (tempSize <= 100000)
-                                    {
-                                        sumSize = sumSize + tempSize;
-                                    }
-                                    directorySizes.Add(tempSize);
-
-                                    foreach (TreeNode<string> child4 in child3.Children)
-                                    {
-                                        isNumber = int.TryParse(child4.Value, out numericValue);
-                                        if (!isNumber)
-                                        {
-                                            tempSize = nodeSize(child4);
-                                            if (tempSize <= 100000)
-                                            {
-                                                sumSize = sumSize + tempSize;
-                                            }
-                                            directorySizes.Add(tempSize);
-
-                                            foreach (TreeNode<string> child5 in child4.Children)
-                                            {
-                                                isNumber = int.TryParse(child5.Value, out numericValue);
-                                                if (!isNumber)
-                                                {
-                                                    tempSize = nodeSize(child5);
-                                                    if (tempSize <= 100000)
-                                                    {
-                                                        sumSize = sumSize + tempSize;
-                                                    }
-                                                    directorySizes.Add(tempSize);
-
-                                                    foreach (TreeNode<string> child6 in child5.Children)
-                                                    {
-                                                        isNumber = int.TryParse(child6.Value, out numericValue);
-                                                        if (!isNumber)
-                                                        {
-                                                            tempSize = nodeSize(child6);
-                                                            if (tempSize <= 100000)
-                                                            {
-                                                                sumSize = sumSize + tempSize;
-                                                            }
-                                                            directorySizes.Add(tempSize);
-
-                                                            foreach (TreeNode<string> child7 in child6.Children)
-                                                            {
-                                                                isNumber = int.TryParse(child7.Value, out numericValue);
-                                                                if (!isNumber)
-                                                                {
-                                                                    tempSize = nodeSize(child7);
-                                                                    if (tempSize <= 100000)
-                                                                    {
-                                                                        sumSize = sumSize + tempSize;
-                                                                    }
-                                                                    directorySizes.Add(tempSize);
-
-                                                                    foreach (TreeNode<string> child8 in child7.Children)
-                                                                    {
-                                                                        isNumber = int.TryParse(child8.Value, out numericValue);
-                                                                        if (!isNumber)
-                                                                        {
-                                                                            tempSize = nodeSize(child8);
-                                                                            if (tempSize <= 100000)
-                                                                            {
-                                                                                sumSize = sumSize + tempSize;
-                                                                            }
-                                                                            directorySizes.Add(tempSize);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    cardValues[character.ToString()] = cardValues[character.ToString()] + 1;
+                                }
+                                else
+                                {
+                                    cardValues.Add(character.ToString(), 1);
                                 }
                             }
+
+                            int handScore = 0;
+                            if (cardValues.Count() == 1)
+                            {
+                                // Five of a kind - 10000000
+                                int index = (((int)char.Parse(cardValues.First().Key.ToUpper())) - 64) * 30;
+                                handScore = 10000000 + index;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 2 && (cardValues.First().Value == 4 || cardValues.Last().Value == 4))
+                            {
+                                //Four of a kind - 1000000
+                                int index = 0;
+                                int indexTwo = 0;
+                                if (cardValues.First().Value == 4)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                }
+                                else
+                                {
+                                    index = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                }
+                                //handScore = 1000000 + index + indexTwo;
+                                handScore = 1000000;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 2 && (cardValues.First().Value == 3 || cardValues.Last().Value == 3))
+                            {
+                                //Full House - 100000
+                                int index = 0;
+                                int indexTwo = 0;
+                                if (cardValues.First().Value == 3)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                }
+                                else
+                                {
+                                    index = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                }
+                                //handScore = 100000 + index + indexTwo;
+                                handScore = 100000;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 3 && (cardValues.First().Value == 3 || cardValues.Last().Value == 3 || cardValues.ElementAt(1).Value == 3) && (cardValues.First().Value == 1 || cardValues.Last().Value == 1 || cardValues.ElementAt(1).Value == 1))
+                            {
+                                //Three of a kind - 10000
+                                int index = 0;
+                                int indexTwo = 0;
+                                int indexThree = 0;
+                                if (cardValues.First().Value == 3)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                }
+                                else if (cardValues.Last().Value == 3)
+                                {
+                                    index = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                }
+                                else
+                                {
+                                    index = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                }
+                                if (indexTwo > indexThree)
+                                {
+                                    //handScore = 10000 + index + (indexTwo * 30) + indexThree;
+                                    handScore = 10000;
+                                }
+                                else
+                                {
+                                    //handScore = 10000 + index + indexTwo + (indexThree * 30);
+                                    handScore = 10000;
+                                }
+                                Console.WriteLine("scores:" + index + ":" + indexTwo + ":" + cardValues.ElementAt(1).Key.ToUpper() + "\n");
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 3 && (cardValues.First().Value == 2 || cardValues.Last().Value == 2 || cardValues.ElementAt(1).Value == 2) && (cardValues.First().Value == 1 || cardValues.Last().Value == 1 || cardValues.ElementAt(1).Value == 1))
+                            {
+                                //Two Pair - 1000
+                                int index = 0;
+                                int indexTwo = 0;
+                                int indexThree = 0;
+                                if (cardValues.First().Value == 2 && cardValues.Last().Value == 2)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexThree = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                }
+                                else if (cardValues.First().Value == 2)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()] * 30;
+                                    indexThree = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                }
+                                else
+                                {
+                                    index = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()] * 30;
+                                    indexThree = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                }
+                                //handScore = 1000 + index + indexTwo + indexThree;
+                                handScore = 1000;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 4)
+                            {
+                                //One Pair - 100
+                                int index = 0;
+                                int indexTwo = 0;
+                                int indexThree = 0;
+                                int indexFour = 0;
+                                if (cardValues.First().Value == 2)
+                                {
+                                    index = cardScoringTable[cardValues.First().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                    indexFour = cardScoringTable[cardValues.ElementAt(2).Key.ToUpper()];
+                                }
+                                else if (cardValues.Last().Value == 2)
+                                {
+                                    index = cardScoringTable[cardValues.Last().Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                    indexFour = cardScoringTable[cardValues.ElementAt(2).Key.ToUpper()];
+                                }
+                                else if (cardValues.ElementAt(1).Value == 2)
+                                {
+                                    index = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                    indexFour = cardScoringTable[cardValues.ElementAt(2).Key.ToUpper()];
+                                }
+                                else
+                                {
+                                    index = cardScoringTable[cardValues.ElementAt(2).Key.ToUpper()] * 30;
+                                    indexTwo = cardScoringTable[cardValues.Last().Key.ToUpper()];
+                                    indexThree = cardScoringTable[cardValues.First().Key.ToUpper()];
+                                    indexFour = cardScoringTable[cardValues.ElementAt(1).Key.ToUpper()];
+                                }
+                                //handScore = 100 + index + indexTwo + indexThree + indexFour;
+                                handScore = 100;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+                            else if (cardValues.Count() == 5)
+                            {
+                                //High Card - 1
+                                int index = 0;
+                                int indexTwo = 0;
+                                int indexThree = 0;
+                                int indexFour = 0;
+                                int indexFive = 0;
+                                index = ((int)char.Parse(cardValues.ElementAt(0).Key.ToUpper())) - 64;
+                                indexTwo = ((int)char.Parse(cardValues.ElementAt(1).Key.ToUpper())) - 64;
+                                indexThree = ((int)char.Parse(cardValues.ElementAt(2).Key.ToUpper())) - 64;
+                                indexFour = ((int)char.Parse(cardValues.ElementAt(3).Key.ToUpper())) - 64;
+                                indexFive = ((int)char.Parse(cardValues.ElementAt(4).Key.ToUpper())) - 64;
+                                //handScore = 1 + index + indexTwo + indexThree + indexFour + indexFive;
+                                handScore = 1;
+                                handsValue.Add(hand.Key, handScore);
+                            }
+
+                            /*
+                            Console.WriteLine("Hand " + hand.Key + " splits into: \n");
+                            foreach (KeyValuePair<string, int> seedItem in cardValues)
+                            {
+                                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(seedItem))
+                                {
+                                    string name = descriptor.Name;
+                                    object value = descriptor.GetValue(seedItem);
+                                    Console.WriteLine("{0}={1}", name, value);
+                                }
+                            }
+
                         }
-                    }
-                }
+                        var sortedKeyValuePairs = handsValue.OrderBy(x => x.Value).ToList();
+                         i = 1;
+                         totalScore = 0;
 
-
-            }
-
-            int totalSize = nodeSize(root);
-            int targetSize = 70000000;
-            int remainingSize = targetSize - totalSize;
-            int selectedDirSize = 0;
-            int tempNum = 0;
-
-            directorySizes.Sort();
-            foreach (var number in directorySizes) 
-            {
-                tempNum = Int32.Parse(number.ToString());
-                int temp2 = remainingSize + tempNum;
-                //System.Console.WriteLine("h21 - " + tempNum + " - " + remainingSize + " - " + temp2 + "\n");
-                if (remainingSize + tempNum >= 30000000)
-                {
-                    //System.Console.WriteLine("h2");
-                    selectedDirSize = tempNum;
-                    break;
-                }
-            }
-                
-
-            output = "Part A: " + sumSize;
-            output += "\nPart B: " + selectedDirSize;
-
-            
-
-
-
+                        foreach (KeyValuePair<string, int> sortedKeyValuePair in sortedKeyValuePairs)
+                        {
+                            Console.WriteLine("Scoring hand " + sortedKeyValuePair.Key + " with the hand score of " + hands[sortedKeyValuePair.Key] + "\n");
+                            totalScore = totalScore + (hands[sortedKeyValuePair.Key] * i);
+                            i++;
+                        }
+                */
+            //output = "Part A: " + totalScore;
         }
 
-
-
-        public void printNode(TreeNode<string> node)
+        public class Hand
         {
-            System.Console.WriteLine(node.Value+" - ");
-            foreach (TreeNode<string> child in node.Children)
-            {
-                printNode(child); //<-- recursive
-            }
-        }
-
-        public int nodeSize(TreeNode<string> node)
-        {
-            int size = 0;
-            int numericValue;
-            bool isNumber = int.TryParse(node.Value, out numericValue);
-            if (isNumber)
-            {
-                size = numericValue;
-            }
-            System.Console.WriteLine(node.Value + " - ");
-            foreach (TreeNode<string> child in node.Children)
-            {
-                size = size + nodeSize(child); //<-- recursive
-            }
-
-            return size;
-        }
-
-
-
-        public class TreeNode<T>
-        {
-            private readonly T _value;
-            private readonly List<TreeNode<T>> _children = new List<TreeNode<T>>();
-
-            public TreeNode(T value)
-            {
-                _value = value;
-            }
-
-            public TreeNode<T> this[int i]
-            {
-                get { return _children[i]; }
-            }
-
-            public TreeNode<T> Parent { get; private set; }
-
-            public T Value { get { return _value; } }
-
-            public ReadOnlyCollection<TreeNode<T>> Children
-            {
-                get { return _children.AsReadOnly(); }
-            }
-
-            public TreeNode<T> AddChild(T value)
-            {
-                var node = new TreeNode<T>(value) { Parent = this };
-                _children.Add(node);
-                return node;
-            }
-
-            public TreeNode<T> InsertChild(TreeNode<T> parent, T value) { 
-                var node = new TreeNode<T>(value) { Parent = parent }; 
-                parent._children.Add(node); return node; 
-            }
-            
-
-            public TreeNode<T>[] AddChildren(params T[] values)
-            {
-                return values.Select(AddChild).ToArray();
-            }
-
-            public bool RemoveChild(TreeNode<T> node)
-            {
-                return _children.Remove(node);
-            }
-
-            public void Traverse(Action<T> action)
-            {
-                action(Value);
-                foreach (var child in _children)
-                    child.Traverse(action);
-            }
-
-            public IEnumerable<T> Flatten()
-            {
-                return new[] { Value }.Concat(_children.SelectMany(x => x.Flatten()));
-            }
+            public int card1 { get; set; }
+            public int card2 { get; set; }
+            public int card3 { get; set; }
+            public int card4 { get; set; }
+            public int card5 { get; set; }
+            public int handType { get; set; }
+            public int handBid { get; set; }
+            public string hand { get; set; }
+           
         }
 
         public string output;
