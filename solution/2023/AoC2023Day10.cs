@@ -8,7 +8,7 @@ namespace AoC2023.solution
 {
     public class AoCDay10
     {
-        public List<int> pathSteps = new List<int>();
+        public HashSet<int> pathSteps = new HashSet<int>();
         public IDictionary<string, int> gridValues = new Dictionary<string, int>();
         public string[,] grid;
         public Dictionary<Position, int> shortestPathOptions = new Dictionary<Position, int>();
@@ -25,7 +25,7 @@ namespace AoC2023.solution
 
             grid = new string[arrayLength, arrayWidth];
             grid = createGrid(grid, arrayLength, arrayWidth);
-            List<Position> possiblePositions = new List<Position>();
+            HashSet<Position> possiblePositions = new HashSet<Position>();
             
 
             int row = 0;
@@ -51,7 +51,7 @@ namespace AoC2023.solution
                 row++;
                 column = 0;
             }
-            List<Position> visitedLocations = new List<Position>();
+            HashSet<Position> visitedLocations = new HashSet<Position>();
             var startingLocation = new Position(startingLocationX, startingLocationY);
             Console.WriteLine(startingLocation.ToString());
             var explorerInfo = new Explorer(0, startingLocation, visitedLocations);
@@ -103,7 +103,7 @@ namespace AoC2023.solution
 
             }
         }
-        public record Explorer(int steps, Position position, List<Position> visitedLocations);
+        public record Explorer(int steps, Position position, HashSet<Position> visitedLocations);
         public record Position(int x, int y);
         public Explorer findThePath(Map map, Explorer explorerInformation, Position targetPosition)
         {
@@ -129,8 +129,9 @@ namespace AoC2023.solution
                     return explorer;
                 }
 
-                foreach (var explorerOption in movementOptions(explorer, map))
+                foreach (Explorer explorerOption in movementOptions(explorer, map))
                 {
+                    explorerOption.visitedLocations.Add(explorerOption.position);
                     if (!previousExplorers.Contains(explorerOption))
                     {
                         //if (explorer.steps > 1000) break;
@@ -179,13 +180,13 @@ namespace AoC2023.solution
 
                 if (map.getGridState(explorer.steps + 1, southOption) == 'L' || map.getGridState(explorer.steps + 1, southOption) == 'J' || map.getGridState(explorer.steps + 1, southOption) == '|')
                 {
-                    List<Position> tempList = new List<Position>(explorer.visitedLocations);
-                    tempList.Add(southOption);
+                    //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
+                    //tempList.Add(southOption);
                     yield return explorer with
                     {
                         steps = explorer.steps + 1,
                         position = southOption,
-                        visitedLocations = tempList
+                        //visitedLocations = tempList
                     };
                 }
                 
@@ -202,13 +203,16 @@ namespace AoC2023.solution
                 //Console.WriteLine("north option :: " + explorer.position.x +","+ explorer.position.y + " :: " + northOption.x +", "+ northOption.y);
                 if (map.getGridState(explorer.steps + 1, northOption) == 'F' || map.getGridState(explorer.steps + 1, northOption) == '7' || map.getGridState(explorer.steps + 1, northOption) == '|')
                 {
-                    List<Position> tempList = new List<Position>(explorer.visitedLocations);
-                    tempList.Add(northOption);
+                    //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
+                    //tempList.Add(northOption);
+                    //HashSet<Position> tempList = new HashSet<Position>();
+                    //tempList.Add(northOption);
+                    //tempList.UnionWith(explorer.visitedLocations);
                     yield return explorer with
                     {
                         steps = explorer.steps + 1,
                         position = northOption,
-                        visitedLocations = tempList
+                        //visitedLocations = tempList
                     };
                 }
 
@@ -226,13 +230,13 @@ namespace AoC2023.solution
                 //Console.WriteLine("east option");
                 if (map.getGridState(explorer.steps + 1, eastOption) == '7' || map.getGridState(explorer.steps + 1, eastOption) == 'J' || map.getGridState(explorer.steps + 1, eastOption) == '-')
                 {
-                    List<Position> tempList = new List<Position>(explorer.visitedLocations);
-                    tempList.Add(eastOption);
+                    //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
+                    //tempList.Add(eastOption);
                     yield return explorer with
                     {
                         steps = explorer.steps + 1,
                         position = eastOption,
-                        visitedLocations = tempList
+                        //visitedLocations = tempList
                     };
                 }
 
@@ -248,13 +252,13 @@ namespace AoC2023.solution
             {
                 if (map.getGridState(explorer.steps + 1, westOption) == 'L' || map.getGridState(explorer.steps + 1, westOption) == 'F' || map.getGridState(explorer.steps + 1, westOption) == '-')
                 {
-                    List<Position> tempList = new List<Position>(explorer.visitedLocations);
-                    tempList.Add(westOption);
+                    //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
+                    //tempList.Add(westOption);
                     yield return explorer with
                     {
                         steps = explorer.steps + 1,
                         position = westOption,
-                        visitedLocations = tempList
+                        //visitedLocations = tempList
                     };
 
                 }
