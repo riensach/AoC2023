@@ -76,9 +76,9 @@ namespace AoC2023.solution
                 //Console.WriteLine(i);
                 //valueHistorys[i].Add(nextNumber[i]);
             }
-            Console.WriteLine(string.Join("\t", valueHistorys[0]));
-            Console.WriteLine(string.Join("\t", valueHistorys[1]));
-            Console.WriteLine(string.Join("\t", valueHistorys[2]));
+            //Console.WriteLine(string.Join("\t", valueHistorys[0]));
+            //Console.WriteLine(string.Join("\t", valueHistorys[1]));
+            //Console.WriteLine(string.Join("\t", valueHistorys[2]));
 
             Int64 totalScore = 0;
             for (int i = 0; i < nextNumber.Count(); i++)
@@ -117,9 +117,9 @@ namespace AoC2023.solution
                 }
                 firstNumber.Add(valueDifferences[0].First());
             }
-            Console.WriteLine(string.Join("\t", valueHistorysReversed[0]));
-            Console.WriteLine(string.Join("\t", valueHistorysReversed[1]));
-            Console.WriteLine(string.Join("\t", valueHistorysReversed[2]));
+            //Console.WriteLine(string.Join("\t", valueHistorysReversed[0]));
+            //Console.WriteLine(string.Join("\t", valueHistorysReversed[1]));
+            //Console.WriteLine(string.Join("\t", valueHistorysReversed[2]));
 
             Int64 totalScoreSecond = 0;
             for (int i = 0; i < nextNumber.Count(); i++)
