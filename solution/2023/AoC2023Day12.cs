@@ -5,6 +5,8 @@ using System.Data.Common;
 using System.Collections.Generic;
 using static ABI.System.Collections.Generic.IReadOnlyDictionary_Delegates;
 using Windows.Media.Audio;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace AoC2023.solution
 {
@@ -24,6 +26,8 @@ namespace AoC2023.solution
                 StringSplitOptions.None
             );
 
+            int totalPossibleCombos = 0;
+
             foreach (string line in lines)
             {
                 string[] springs = line.Split(" ");
@@ -32,234 +36,135 @@ namespace AoC2023.solution
 
                 int mapSize = springs[0].Length;
                 int totalSprings = springs[1].Split(",").ToList().Sum(int.Parse);
+                List<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToList();
                 int totalSpringsUnknown = springs[0].Count(f => f == '?');
                 int totalSpringGroups = springs[1].Split(",").Count();
 
+
+                possibleCombos = validCombinations(springs[0].ToCharArray(), springGroupsList);
+
+                totalPossibleCombos = totalPossibleCombos + possibleCombos;
+
+
+                //Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
+
+            }
+
+            output = "Part A:" + totalPossibleCombos;
+
+        }
+
+        static List<List<int>> GetCombination(List<int> list, int locationsToFill)
+        {
+            double count = Math.Pow(2, list.Count);
+            List<List<int>> returnList = new List<List<int>>();
+            for (int i = 1; i <= count - 1; i++)
+            {
+                string str = Convert.ToString(i, 2).PadLeft(list.Count, '0');
+                int combos = 0;
+                string options = "";
+                List<int> tempList = new List<int>();
+                for (int j = 0; j < str.Length; j++)
+                {
+                    if (str[j] == '1')
+                    {
+                        //Console.Write(list[j]);
+                        options += list[j]+",";
+                        tempList.Add(list[j]);
+                        combos++;
+                    }
+                }
+                if(combos== locationsToFill)
+                {
+                    //Console.WriteLine(options);
+                    returnList.Add(tempList);
+                }
+                //Console.WriteLine();
+            }
+            return returnList;
+        }
+        public bool isValidList(char[] lineVales, List<int> combinationIDs, List<int> validGroups)
+        {
+            char[] updatedLineValues = new char[lineVales.Length];
+            lineVales.CopyTo(updatedLineValues, 0);
+            foreach(int combinationID in combinationIDs)
+            {
+                updatedLineValues[combinationID] = '#';
+            }
+
+
+            //regex code: 
+            string pattern = @"([#]+)";
+            Regex rg = new Regex(pattern);
+            string updatedString = new string(updatedLineValues);
+            MatchCollection matchedWords = rg.Matches(updatedString);
+            //Console.WriteLine("Matches: "+ matchedWords.Count()+" and valid groups count: "+ validGroups.Count() + " in string: " + updatedString);
+            if (matchedWords.Count() != validGroups.Count()) return false; // Not the right number of groups
+
+            for (int i = 0; i < matchedWords.Count; i++)
+            {
                 
-                //possibleCombos = ();
-
-                Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
-
-
-
-
-
-                foreach (char lineItem in line)
-                {
-
-                }
+                if (matchedWords[i].Groups[1].Value.Length != validGroups[i]) return false; // Group not of the right size
             }
 
-
-
-            //output += "Part A: " + lowestSteps;
-
-            /*
-
-            arrayLength = lines.Count();
-            arrayWidth = lines[0].Length;
-
-            grid = new int[arrayLength, arrayWidth];
-            grid = createGrid(grid, arrayLength, arrayWidth);
-            // Starting square = S
-            // Goal square = E
-
-            int row = 0;
-            int column = 0;
-            int startingLocationX = 0;
-            int startingLocationY = 0;
-
-            foreach (string line in lines)
-            {
-                foreach (var character in line)
-                {
-                    int index = char.ToUpper(character) - 64;
-                    grid[row, column] = index;
-                    if (character.ToString() == "S")
-                    {
-                        startingLocationX = row;
-                        startingLocationY = column;
-                        grid[row, column] = 1;
-                        Console.WriteLine("Starting Location: " + startingLocationX + "," + startingLocationY);
-                    }
-                    if (character.ToString() == "E")
-                    {
-                        targetLocationX = row;
-                        targetLocationY = column;
-                        grid[row, column] = 26;
-                        Console.WriteLine("Target Location: " + targetLocationX + "," + targetLocationY);
-                    }
-                    column++;                    
-                }
-                row++;
-                column = 0;
-            }
-
-            
-
-            int lowestSteps = 0;
-            int stepCount = 0;
-
-
-            for (int x = 0; x < arrayLength; x++)
-            {
-                for (int y = 0; y < arrayWidth; y++)
-                {
-                    if (grid[x,y] == 1) {
-                        findLocation(x, y, stepCount);
-                    }
-                }
-
-            }
-
-            
-
-            pathSteps.Sort();
-
-            lowestSteps = pathSteps.First();
-
-
-
-            output = printGrid(grid, arrayLength, arrayWidth);
-
-            output += "Part A: " + lowestSteps;
-
-            */
+            //Console.WriteLine("got here");
+            return true;
         }
-
-        public void findLocation(int currentLocationX, int currentLocationY, int stepCount)
+        public int validCombinations(char[] springInput, List<int> sprintGroups)
         {
+            int validCombos = 0;
 
-            //Stack<BinaryNode> stack = new Stack<BinaryNode>();
-            Queue<string> queue = new Queue<string>();
-            string queueString = currentLocationX + "," + currentLocationY + "," + stepCount;
-            queue.Enqueue(queueString);
-            do
+            int totalSpringsUnknown = springInput.Count(f => f == '?');
+            int totalSpringsKnown = springInput.Count(f => f == '#');
+            int totalSpringsNotLocated = springInput.Count(f => f == '.');
+            int possibleLocations = sprintGroups.Sum();
+            char[] lineValues = springInput;
+            int remainingLocations = possibleLocations - totalSpringsKnown;
+
+
+            List<int> possibleOptions = new List<int>();
+            for (int i = 0; i < springInput.Length; i++)
             {
-                string currentItem = queue.Dequeue();
-                string[] commands = currentItem.Split(',');
-                int locationX = Int32.Parse(commands[0]);
-                int locationY = Int32.Parse(commands[1]);
-                int stepCountNew = Int32.Parse(commands[2]);
-
-                //Console.WriteLine(locationX + " - " + locationY + " - " + stepCountNew);
-
-                if (locationX == targetLocationX && locationY == targetLocationY)
-                {
-                    Console.WriteLine("Made it to the end with " + stepCountNew + " steps taken!\n");
-                    pathSteps.Add(stepCountNew);
-                    continue;
-                }
-
-                if (gridValues.ContainsKey(locationX + "," + locationY))
-                {
-                    if (gridValues[locationX + "," + locationY] <= stepCountNew)
-                    {
-                        continue; // I've made it here for less steps before
-                    }
-                    else
-                    {
-                        gridValues[locationX + "," + locationY] = stepCountNew;
-                    }
-                }
-                else
-                {
-                    gridValues[locationX + "," + locationY] = stepCountNew;
-                }
-                int currentValue = grid[locationX, locationY];
-                int optionAbove = (locationX - 1 < 0) ? 100 : grid[locationX - 1, locationY];
-                int optionBelow = (locationX + 1 >= arrayLength) ? 100 : grid[locationX + 1, locationY];
-                int optionLeft = (locationY - 1 < 0) ? 100 : grid[locationX, locationY - 1];
-                int optionRight = (locationY + 1 >= arrayWidth) ? 100 : grid[locationX, locationY + 1];
-
-                int tempChange;
-                tempChange = locationX - 1;
-                string optionAboveString = tempChange + "," + locationY;
-                tempChange = locationX + 1;
-                string optionBelowString = tempChange + "," + locationY;
-                tempChange = locationY - 1;
-                string optionLeftString = locationX + "," + tempChange;
-                tempChange = locationY + 1;
-                string optionRightString = locationX + "," + tempChange;
-                if (optionAbove <= currentValue + 1)
-                {
-                    //Console.WriteLine("Option above, moving from " + locationX + "," + locationY + " with " + stepCountNew + " total steps so far.\n");
-
-                    int newX = locationX - 1;
-                    int newY = locationY;
-                    int newSteps = stepCountNew + 1;
-                    string newQueueString = newX + "," + newY + "," + newSteps;
-                    queue.Enqueue(newQueueString);
-                    //findLocation(locationX - 1, locationY, stepCountNew + 1);
-                }
-                if (optionBelow <= currentValue + 1)
-                {
-                    //Console.WriteLine("Option below, moving from " + locationX + "," + locationY + " with " + stepCountNew + " total steps so far.\n");
-                    int newX = locationX + 1;
-                    int newY = locationY;
-                    int newSteps = stepCountNew + 1;
-                    string newQueueString = newX + "," + newY + "," + newSteps;
-                    queue.Enqueue(newQueueString);
-                    //findLocation(locationX + 1, locationY, stepCountNew + 1);
-                }
-                if (optionLeft <= currentValue + 1)
-                {
-                    //Console.WriteLine("Option left, moving from " + locationX + "," + locationY + " with " + stepCountNew + " total steps so far.\n");
-                    int newX = locationX;
-                    int newY = locationY - 1;
-                    int newSteps = stepCountNew + 1;
-                    string newQueueString = newX + "," + newY + "," + newSteps;
-                    queue.Enqueue(newQueueString);
-                    //findLocation(locationX, locationY - 1, stepCountNew + 1);
-                }
-                if (optionRight <= currentValue + 1)
-                {
-                    //Console.WriteLine("Option right, moving from " + locationX + "," + locationY + " with " + stepCountNew + " total steps so far.\n");
-                    int newX = locationX;
-                    int newY = locationY + 1;
-                    int newSteps = stepCountNew + 1;
-                    string newQueueString = newX + "," + newY + "," + newSteps;
-                    queue.Enqueue(newQueueString);
-                    //findLocation(locationX, locationY + 1, stepCountNew + 1);
-                }
-            } while (queue.Count > 0);
-            return;
-            
-        }
-
-        public string printGrid(int[,] grid, int xSize, int ySize)
-        {
-            string output = "\nGrid:\n";
-
-            for (int x = 0; x < xSize; x++)
-            {
-                for (int y = 0; y < ySize; y++)
-                {
-                    string toWrite = grid[x, y].ToString();
-                    //System.Console.WriteLine(toWrite);
-
-                    output += " " + toWrite;
-                }
-                //System.Console.WriteLine("\n");
-                output += "\n";
+                if (springInput[i] != '?') continue;
+                possibleOptions.Add(i);
+                lineValues[i] = springInput[i];
             }
 
-            return output;
-        }
+            List<List<int>> combinationOptions = GetCombination(possibleOptions, remainingLocations);
 
-        public int[,] createGrid(int[,] grid, int xSize, int ySize)
-        {
-
-            for (int x = 0; x < xSize; x++)
+            foreach (var combinationOption in combinationOptions)
             {
-                for (int y = 0; y < ySize; y++)
+                bool validList = false;
+                validList = isValidList(lineValues, combinationOption, sprintGroups);
+                if(validList)
                 {
-                    grid[x, y] = 0;
+                    validCombos++;
                 }
             }
 
-            return grid;
+
+
+
+            List<char> springInputIndividual = new List<char>(springInput);
+
+
+           
+            int possibleCombinations = (totalSpringsUnknown * remainingLocations) / 2;
+
+
+
+
+
+            //Console.WriteLine("Outstanding springs to find: " + remainingLocations);
+            //Console.WriteLine("Possible combos: " + possibleCombinations);
+            //Console.WriteLine("Valid combos: " + validCombos);
+
+
+
+            return validCombos;
         }
+
+        
 
         public string output;
     }
