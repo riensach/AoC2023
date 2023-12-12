@@ -3,6 +3,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Data.Common;
 using System.Collections.Generic;
+using static ABI.System.Collections.Generic.IReadOnlyDictionary_Delegates;
+using Windows.Media.Audio;
 
 namespace AoC2023.solution
 {
@@ -21,6 +23,38 @@ namespace AoC2023.solution
                 new string[] { Environment.NewLine },
                 StringSplitOptions.None
             );
+
+            foreach (string line in lines)
+            {
+                string[] springs = line.Split(" ");
+
+                int possibleCombos = 0;
+
+                int mapSize = springs[0].Length;
+                int totalSprings = springs[1].Split(",").ToList().Sum(int.Parse);
+                int totalSpringsUnknown = springs[0].Count(f => f == '?');
+                int totalSpringGroups = springs[1].Split(",").Count();
+
+                
+                //possibleCombos = ();
+
+                Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
+
+
+
+
+
+                foreach (char lineItem in line)
+                {
+
+                }
+            }
+
+
+
+            //output += "Part A: " + lowestSteps;
+
+            /*
 
             arrayLength = lines.Count();
             arrayWidth = lines[0].Length;
@@ -89,6 +123,8 @@ namespace AoC2023.solution
             output = printGrid(grid, arrayLength, arrayWidth);
 
             output += "Part A: " + lowestSteps;
+
+            */
         }
 
         public void findLocation(int currentLocationX, int currentLocationY, int stepCount)
