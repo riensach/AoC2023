@@ -30,34 +30,27 @@ namespace AoC2023.solution
 
                 int mapSize = springs[0].Length;
                 int totalSprings = springs[1].Split(",").ToList().Sum(int.Parse);
-                HashSet<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToHashSet();
+                List<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToList();
                 int totalSpringsUnknown = springs[0].Count(f => f == '?');
                 int totalSpringGroups = springs[1].Split(",").Count();
+
 
                 possibleCombos = validCombinations(springs[0].ToCharArray(), springGroupsList);
                 validCombos.Add(line, possibleCombos);
 
                 totalPossibleCombos = totalPossibleCombos + possibleCombos;
 
-                //Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
+                Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
 
             }
 
-            foreach (var valueHistory in validCombos)
-            {
-                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(valueHistory))
-                {
-                    string name = descriptor.Name;
-                    object value = descriptor.GetValue(valueHistory);
-                    Console.WriteLine("{0}={1}", name, value);
-                }
-            }
+
             int countedCombos = validCombos.Count;
             output = "Part A:" + totalPossibleCombos;
 
 
             
-            /*
+            
             int totalPossibleCombosSecond = 0;
 
             foreach (string line in lines)
@@ -78,11 +71,11 @@ namespace AoC2023.solution
                 validCombos.Add(springs[0] + springs[1], possibleCombos);
 
                 totalPossibleCombosSecond = totalPossibleCombosSecond + possibleCombos;
-                Console.WriteLine(springs[0] + " - " + springs[1]);
-                Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
+                //Console.WriteLine(springs[0] + " - " + springs[1]);
+                //Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
 
             }
-
+            /*
              foreach (var valueHistory in validCombos)
              {
                  foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(valueHistory))
@@ -91,9 +84,9 @@ namespace AoC2023.solution
                      object value = descriptor.GetValue(valueHistory);
                      Console.WriteLine("{0}={1}", name, value);
                  }
-             }
+             }*/
 
-             output += "Part B:" + totalPossibleCombosSecond;*/
+             output += "\nPart B:" + totalPossibleCombosSecond;
 
 
 
@@ -113,7 +106,7 @@ namespace AoC2023.solution
                 {
                     if (str[j] == '1')
                     {
-                        //Console.Write(list[j]);
+                        //Console.Write(list.ElementAt(j));
                         options += list.ElementAt(j)+",";
                         tempList.Add(list.ElementAt(j));
                         combos++;
@@ -124,11 +117,11 @@ namespace AoC2023.solution
                     //Console.WriteLine(options);
                     returnList.Add(tempList);
                 }
-                //Console.WriteLine();
+                //Console.WriteLine("hello - " + locationsToFill);
             }
             return returnList;
         }
-        public bool isValidList(char[] lineVales, HashSet<int> combinationIDs, HashSet<int> validGroups)
+        public bool isValidList(char[] lineVales, HashSet<int> combinationIDs, List<int> validGroups)
         {
             char[] updatedLineValues = new char[lineVales.Length];
             lineVales.CopyTo(updatedLineValues, 0);
@@ -153,10 +146,10 @@ namespace AoC2023.solution
             }
             //Console.WriteLine("Matches: " + matchedWords.Count() + " and valid groups count: " + validGroups.Count() + " in string: " + updatedString);
 
-            Console.WriteLine("Returning true");
+            //Console.WriteLine("Returning true");
             return true;
         }
-        public int validCombinations(char[] springInput, HashSet<int> sprintGroups)
+        public int validCombinations(char[] springInput, List<int> sprintGroups)
         {
             int validCombos = 0;
 
@@ -166,6 +159,9 @@ namespace AoC2023.solution
             int possibleLocations = sprintGroups.Sum();
             char[] lineValues = springInput;
             int remainingLocations = possibleLocations - totalSpringsKnown;
+
+
+
 
 
             HashSet<int> possibleOptions = new HashSet<int>();
@@ -178,7 +174,7 @@ namespace AoC2023.solution
                     lineValues[i] = springInput[i];
                 } else if (springInput[i] == '#')
                 {
-                    //initialOption.Add(i);
+                    initialOption.Add(i);
                 }
 
             }
