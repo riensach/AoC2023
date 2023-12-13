@@ -30,7 +30,7 @@ namespace AoC2023.solution
 
                 int mapSize = springs[0].Length;
                 int totalSprings = springs[1].Split(",").ToList().Sum(int.Parse);
-                List<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToList();
+                HashSet<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToHashSet();
                 int totalSpringsUnknown = springs[0].Count(f => f == '?');
                 int totalSpringGroups = springs[1].Split(",").Count();
 
@@ -56,29 +56,66 @@ namespace AoC2023.solution
             output = "Part A:" + totalPossibleCombos;
 
 
+            
+            /*
+            int totalPossibleCombosSecond = 0;
 
+            foreach (string line in lines)
+            {
+                string[] springs = line.Split(" ");
+
+                int possibleCombos = 0;
+                springs[0] = springs[0] + "?" + springs[0] + "?" + springs[0] + "?" + springs[0] + "?" + springs[0];
+                springs[1] = springs[1] + "," + springs[1] + "," + springs[1] + "," + springs[1] + "," + springs[1];
+
+                int mapSize = springs[0].Length;
+                int totalSprings = springs[1].Split(",").ToList().Sum(int.Parse);
+                List<int> springGroupsList = springs[1].Split(",").Select(Int32.Parse).ToList();
+                int totalSpringsUnknown = springs[0].Count(f => f == '?');
+                int totalSpringGroups = springs[1].Split(",").Count();
+
+                possibleCombos = validCombinations(springs[0].ToCharArray(), springGroupsList);
+                validCombos.Add(springs[0] + springs[1], possibleCombos);
+
+                totalPossibleCombosSecond = totalPossibleCombosSecond + possibleCombos;
+                Console.WriteLine(springs[0] + " - " + springs[1]);
+                Console.WriteLine("Map size: "+ mapSize+" and total springs: "+ totalSprings+ " and total groups: " + totalSpringGroups + " and total unknown areas: "+ totalSpringsUnknown);
+
+            }
+
+             foreach (var valueHistory in validCombos)
+             {
+                 foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(valueHistory))
+                 {
+                     string name = descriptor.Name;
+                     object value = descriptor.GetValue(valueHistory);
+                     Console.WriteLine("{0}={1}", name, value);
+                 }
+             }
+
+             output += "Part B:" + totalPossibleCombosSecond;*/
 
 
 
         }
 
-        static List<List<int>> GetCombination(List<int> list, int locationsToFill)
+        static HashSet<HashSet<int>> GetCombination(HashSet<int> list, int locationsToFill)
         {
             double count = Math.Pow(2, list.Count);
-            List<List<int>> returnList = new List<List<int>>();
+            HashSet<HashSet<int>> returnList = new HashSet<HashSet<int>>();
             for (int i = 0; i < count; i++)
             {
                 string str = Convert.ToString(i, 2).PadLeft(list.Count, '0');
                 int combos = 0;
                 string options = "";
-                List<int> tempList = new List<int>();
+                HashSet<int> tempList = new HashSet<int>();
                 for (int j = 0; j < str.Length; j++)
                 {
                     if (str[j] == '1')
                     {
                         //Console.Write(list[j]);
-                        options += list[j]+",";
-                        tempList.Add(list[j]);
+                        options += list.ElementAt(j)+",";
+                        tempList.Add(list.ElementAt(j));
                         combos++;
                     }
                 }
@@ -91,7 +128,7 @@ namespace AoC2023.solution
             }
             return returnList;
         }
-        public bool isValidList(char[] lineVales, List<int> combinationIDs, List<int> validGroups)
+        public bool isValidList(char[] lineVales, HashSet<int> combinationIDs, HashSet<int> validGroups)
         {
             char[] updatedLineValues = new char[lineVales.Length];
             lineVales.CopyTo(updatedLineValues, 0);
@@ -112,14 +149,14 @@ namespace AoC2023.solution
             for (int i = 0; i < matchedWords.Count; i++)
             {
                 
-                if (matchedWords[i].Groups[1].Value.Length != validGroups[i]) return false; // Group not of the right size
+                if (matchedWords[i].Groups[1].Value.Length != validGroups.ElementAt(i)) return false; // Group not of the right size
             }
             //Console.WriteLine("Matches: " + matchedWords.Count() + " and valid groups count: " + validGroups.Count() + " in string: " + updatedString);
 
-            //Console.WriteLine("Returning true");
+            Console.WriteLine("Returning true");
             return true;
         }
-        public int validCombinations(char[] springInput, List<int> sprintGroups)
+        public int validCombinations(char[] springInput, HashSet<int> sprintGroups)
         {
             int validCombos = 0;
 
@@ -131,15 +168,23 @@ namespace AoC2023.solution
             int remainingLocations = possibleLocations - totalSpringsKnown;
 
 
-            List<int> possibleOptions = new List<int>();
+            HashSet<int> possibleOptions = new HashSet<int>();
+            HashSet<int> initialOption = new HashSet<int>();
             for (int i = 0; i < springInput.Length; i++)
             {
-                if (springInput[i] != '?') continue;
-                possibleOptions.Add(i);
-                lineValues[i] = springInput[i];
+                if (springInput[i] == '?')
+                {
+                    possibleOptions.Add(i);
+                    lineValues[i] = springInput[i];
+                } else if (springInput[i] == '#')
+                {
+                    //initialOption.Add(i);
+                }
+
             }
 
-            List<List<int>> combinationOptions = GetCombination(possibleOptions, remainingLocations);
+            HashSet<HashSet<int>> combinationOptions = GetCombination(possibleOptions, remainingLocations);
+            //combinationOptions.Add(initialOption);
 
             foreach (var combinationOption in combinationOptions)
             {
