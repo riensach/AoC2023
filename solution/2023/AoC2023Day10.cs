@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
 using Windows.UI.StartScreen;
+using System.Collections.Generic;
 
 namespace AoC2023.solution
 {
@@ -51,15 +52,16 @@ namespace AoC2023.solution
                 row++;
                 column = 0;
             }
-            HashSet<Position> visitedLocations = new HashSet<Position>();
+            
             var startingLocation = new Position(startingLocationX, startingLocationY);
             Console.WriteLine(startingLocation.ToString());
-            var explorerInfo = new Explorer(0, startingLocation, visitedLocations);
             Map maps = new Map(lines, arrayLength, arrayWidth);
             foreach (Position possiblePosition in possiblePositions)
             {
-                Console.WriteLine("Checking path option " + possiblePosition.x + "," + possiblePosition.y); 
-                var shortestPathExplorer = findThePath(maps, explorerInfo, possiblePosition);       
+                HashSet<Position> visitedLocations = new HashSet<Position>(); 
+                var explorerInfo = new Explorer(0, startingLocation, visitedLocations);
+                var shortestPathExplorer = findThePath(maps, explorerInfo, possiblePosition);
+                Console.WriteLine("Looking for position " + possiblePosition.x + "," + possiblePosition.y);
                 if(shortestPathExplorer.steps > 0)
                 {
                     shortestPathOptions.Add(possiblePosition, shortestPathExplorer.steps);
@@ -106,15 +108,15 @@ namespace AoC2023.solution
         public record Explorer(int steps, Position position, HashSet<Position> visitedLocations);
         public record Position(int x, int y);
         public Explorer findThePath(Map map, Explorer explorerInformation, Position targetPosition)
-        {
+        {            
             var queue = new PriorityQueue<Explorer, int>();
-
             int f(Explorer explorer)
             {
                 // estimate the remaining step count with Manhattan distance
                 var dist =
                     Math.Abs(targetPosition.x - explorer.position.x) +
                     Math.Abs(targetPosition.y - explorer.position.y);
+                //Console.WriteLine("Retunring info = "+explorer.steps + "-"+dist);
                 return explorer.steps + dist;
             }
 
@@ -123,17 +125,22 @@ namespace AoC2023.solution
 
             while (queue.Count > 0)
             {
+                //Console.WriteLine("got here");
                 var explorer = queue.Dequeue();
+
                 if (explorer.position == targetPosition)
                 {
+                    //Console.WriteLine("got here4");
                     return explorer;
                 }
-
+                //Console.WriteLine("got here2");
                 foreach (Explorer explorerOption in movementOptions(explorer, map))
                 {
                     explorerOption.visitedLocations.Add(explorerOption.position);
+                    //Console.WriteLine("got here3");
                     if (!previousExplorers.Contains(explorerOption))
                     {
+                        //Console.WriteLine("got here4");
                         //if (explorer.steps > 1000) break;
                         //explorerOption.visitedLocations.Add(explorerOption.position);
                         //Console.WriteLine("Adding previous location "+ explorerOption.position.x+","+ explorerOption.position.y);
@@ -156,9 +163,14 @@ namespace AoC2023.solution
 
 
 
+                    } else
+                    {
+                        //Console.WriteLine("Been here before! " + explorerOption.position + " - " + explorerOption.steps + " - " + explorerOption.visitedLocations);
                     }
                 }
             }
+            
+            //Console.WriteLine("Returning");
             return explorerInformation with
             {
                 steps = -1,
@@ -177,6 +189,19 @@ namespace AoC2023.solution
                 && !explorer.visitedLocations.Contains(southOption)
                 )
             {
+                /*Console.WriteLine("hello");
+                Console.WriteLine("coord: " + southOption.x + " :: " + southOption.y);
+                foreach (var valueHistory in explorer.visitedLocations)
+                {
+                    foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(valueHistory))
+                    {
+                        string name = descriptor.Name;
+                        object value = descriptor.GetValue(valueHistory);
+                        Console.WriteLine("{0}={1}", name, value);
+                    }
+                }*/
+                //explorer.visitedLocations.ForEach(i => Console.Write("{0}\t", i));
+
 
                 if (map.getGridState(explorer.steps + 1, southOption) == 'L' || map.getGridState(explorer.steps + 1, southOption) == 'J' || map.getGridState(explorer.steps + 1, southOption) == '|')
                 {
@@ -200,6 +225,7 @@ namespace AoC2023.solution
                 && !explorer.visitedLocations.Contains(northOption)
                 )
             {
+                //Console.WriteLine("hello");
                 //Console.WriteLine("north option :: " + explorer.position.x +","+ explorer.position.y + " :: " + northOption.x +", "+ northOption.y);
                 if (map.getGridState(explorer.steps + 1, northOption) == 'F' || map.getGridState(explorer.steps + 1, northOption) == '7' || map.getGridState(explorer.steps + 1, northOption) == '|')
                 {
@@ -226,7 +252,7 @@ namespace AoC2023.solution
                 && !explorer.visitedLocations.Contains(eastOption)
                 )
             {
-
+                //Console.WriteLine("hello");
                 //Console.WriteLine("east option");
                 if (map.getGridState(explorer.steps + 1, eastOption) == '7' || map.getGridState(explorer.steps + 1, eastOption) == 'J' || map.getGridState(explorer.steps + 1, eastOption) == '-')
                 {
@@ -250,6 +276,7 @@ namespace AoC2023.solution
                 && !explorer.visitedLocations.Contains(westOption)
                 )
             {
+                //Console.WriteLine("hello");
                 if (map.getGridState(explorer.steps + 1, westOption) == 'L' || map.getGridState(explorer.steps + 1, westOption) == 'F' || map.getGridState(explorer.steps + 1, westOption) == '-')
                 {
                     //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
