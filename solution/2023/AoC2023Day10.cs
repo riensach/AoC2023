@@ -26,63 +26,164 @@ namespace AoC2023.solution
 
             grid = new string[arrayLength, arrayWidth];
             grid = createGrid(grid, arrayLength, arrayWidth);
+            
             HashSet<Position> possiblePositions = new HashSet<Position>();
+            HashSet<Position> allPositions = new HashSet<Position>();
+            HashSet<Position> possibleCages = new HashSet<Position>();
+            Dictionary<string, int> locationSteps = new Dictionary<string,int>();
             
 
             int row = 0;
             int column = 0;
             int startingLocationX = 0;
             int startingLocationY = 0;
+            int possCages = 0;
 
             foreach (string line in lines)
             {
                 foreach (var character in line)
                 {
-                    grid[row, column] = character.ToString();        
-                    if(character == 'S')
+                    grid[row, column] = character.ToString();
+                    allPositions.Add(new Position(row, column));
+                    if (character == 'S')
                     {
                         startingLocationX = row;
                         startingLocationY = column;
+                        locationSteps[row + "," + column] = 999999999;
                     } else if (character != '.')
                     {
                         possiblePositions.Add(new Position(row, column));
+                        locationSteps[row+","+column] = 999999999;
+                    }
+                    else if (character == '.')
+                    {
+                        //possCages++;
+                        possibleCages.Add(new Position(row, column));
+                        locationSteps[row + "," + column] = 999999999;
                     }
                     column++;
                 }
                 row++;
                 column = 0;
             }
+            //Console.WriteLine("Possible cages: " + possCages);
+            //string theGrid = printGrid(grid, arrayLength, arrayWidth);
+            //Console.WriteLine(theGrid);
+            //output += "Part B: " + possCages;
+
             
+
+
+
+
+
+
+
+
+
+
+
+            //return;
+
             var startingLocation = new Position(startingLocationX, startingLocationY);
             Console.WriteLine(startingLocation.ToString());
             Map maps = new Map(lines, arrayLength, arrayWidth);
+            HashSet<Position> pathtoTrack = new HashSet<Position>();
+            int shortestPath = 0;
             foreach (Position possiblePosition in possiblePositions)
             {
                 HashSet<Position> visitedLocations = new HashSet<Position>(); 
                 var explorerInfo = new Explorer(0, startingLocation, visitedLocations);
-                var shortestPathExplorer = findThePath(maps, explorerInfo, possiblePosition);
+                var shortestPathExplorer = findThePath(maps, explorerInfo, possiblePosition, locationSteps);
                 Console.WriteLine("Looking for position " + possiblePosition.x + "," + possiblePosition.y);
-                if(shortestPathExplorer.steps > 0)
+                if(shortestPathExplorer.steps > 0 && shortestPathExplorer.steps > shortestPath)
                 {
-                    shortestPathOptions.Add(possiblePosition, shortestPathExplorer.steps);
+                    //shortestPathOptions.Add(possiblePosition, shortestPathExplorer.steps);
+                    shortestPath = shortestPathExplorer.steps;
+                    pathtoTrack.Clear();
+                    pathtoTrack = shortestPathExplorer.visitedLocations;
                 }
                 
 
             }
-            foreach (var valueHistory in shortestPathOptions)
+
+            //int highestSteps = shortestPathOptions.Values.Max();
+
+            int enclosedCount = 0;
+
+            output += "Part A: " + shortestPath;
+
+            HashSet<Position> possibleCagesList = new HashSet<Position>(possiblePositions.Except(pathtoTrack));
+
+            foreach (Position possCage in possibleCagesList)
             {
-                foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(valueHistory))
+                int northCount = 0;
+                int southCount = 0;
+                int eastCount = 0;
+                int westCount = 0;
+                for (int i = 1; i+ possCage.x < arrayLength; i++)
                 {
-                    string name = descriptor.Name;
-                    object value = descriptor.GetValue(valueHistory);
-                    Console.WriteLine("{0}={1}", name, value);
+                    Position southOption = new Position(possCage.x + i, possCage.y);
+                    if (pathtoTrack.Contains(southOption))
+                    {
+                        southCount++;
+                    }
                 }
+                for (int i = 1; possCage.x - i >= 0; i++)
+                {
+                    Position northOption = new Position(possCage.x - i, possCage.y);
+                    if (pathtoTrack.Contains(northOption))
+                    {
+                        northCount++;
+                    }
+                }
+                for (int i = 1; i + possCage.y < arrayWidth; i++)
+                {
+                    Position eastOption = new Position(possCage.x, possCage.y + i);
+                    if (pathtoTrack.Contains(eastOption))
+                    {
+                        eastCount++;
+                    }
+                }
+                for (int i = 1; possCage.y - i >= 0; i++)
+                {
+                    Position westOption = new Position(possCage.x, possCage.y - i);
+                    if(pathtoTrack.Contains(westOption))
+                    {
+                        westCount++;
+                    }
+                }
+
+                //Console.WriteLine("Location "+possCage.x+","+ possCage.y+" crosses the path the following times. East:"+ eastCount+", West:" + westCount + ", North:" + northCount + ", South:"+ southCount);
+                if ((eastCount % 2 != 0) && (westCount % 2 != 0) && (southCount % 2 != 0) && (northCount % 2 != 0))
+                {
+                    Console.WriteLine("Location " + possCage.x + "," + possCage.y + " is containted!");
+                    enclosedCount++;
+                }
+                
+
             }
-            int highestSteps = shortestPathOptions.Values.Max();
 
-         
 
-            output = "Part A: " + highestSteps;
+            output += "\nPart B: " + enclosedCount;
+
+            string theGrid = printGrid(grid, arrayLength, arrayWidth, pathtoTrack);
+            Console.WriteLine(theGrid);
+
+
+            // Part B is close, but needs to consider all tiles not in the grid
+
+
+
+
+
+
+
+
+
+
+
+
 
         }
 
@@ -98,7 +199,7 @@ namespace AoC2023.solution
                 width = widthInput;
             }
 
-            public char getGridState(int steps, Position position)
+            public char getGridState(Position position)
             {
                 if (position.x < 0 || position.y < 0 || position.x >= mapLines.Length || position.y >= mapLines[0].Length) return '.';
                 return mapLines[position.x][position.y];                
@@ -106,8 +207,9 @@ namespace AoC2023.solution
             }
         }
         public record Explorer(int steps, Position position, HashSet<Position> visitedLocations);
+        public record LocationSteps(int steps, Position position);
         public record Position(int x, int y);
-        public Explorer findThePath(Map map, Explorer explorerInformation, Position targetPosition)
+        public Explorer findThePath(Map map, Explorer explorerInformation, Position targetPosition, Dictionary<string, int> locationSteps)
         {            
             var queue = new PriorityQueue<Explorer, int>();
             int f(Explorer explorer)
@@ -127,7 +229,16 @@ namespace AoC2023.solution
             {
                 //Console.WriteLine("got here");
                 var explorer = queue.Dequeue();
-
+                if (locationSteps[explorer.position.x+","+ explorer.position.y] < explorer.steps)
+                {
+                    //Console.WriteLine("got here4");
+                    return explorerInformation with
+                    {
+                        steps = -1,
+                        position = explorerInformation.position
+                    };
+                }
+                locationSteps[explorer.position.x + "," + explorer.position.y] = explorer.steps;
                 if (explorer.position == targetPosition)
                 {
                     //Console.WriteLine("got here4");
@@ -150,26 +261,16 @@ namespace AoC2023.solution
 
 
 
-
-                        //
-                        //
-                        //
-                        // STUCK ON THE VISITED LOCATIONS ASPECT
-                        // NEED TO FIGURE THAT OUT
-                        //
-                        //
-                        //
-
-
-
-
                     } else
                     {
                         //Console.WriteLine("Been here before! " + explorerOption.position + " - " + explorerOption.steps + " - " + explorerOption.visitedLocations);
                     }
                 }
             }
-            
+            // 58 is wrong
+            // 57 is wrong
+            // 56 is wrong
+            // 55 is wrong
             //Console.WriteLine("Returning");
             return explorerInformation with
             {
@@ -183,9 +284,9 @@ namespace AoC2023.solution
         {
             // Check South
             Position southOption = new Position(explorer.position.x + 1, explorer.position.y);
-            if (map.getGridState(explorer.steps + 1, southOption) != 'S' && map.getGridState(explorer.steps + 1, southOption) != '.' 
-                && (map.getGridState(explorer.steps + 1, explorer.position) == 'S' || map.getGridState(explorer.steps + 1, explorer.position) == '|' 
-                || map.getGridState(explorer.steps + 1, explorer.position) == 'F' || map.getGridState(explorer.steps + 1, explorer.position) == '7')
+            if (map.getGridState(southOption) != 'S' && map.getGridState(southOption) != '.' 
+                && (map.getGridState(explorer.position) == 'S' || map.getGridState(explorer.position) == '|' 
+                || map.getGridState(explorer.position) == 'F' || map.getGridState(explorer.position) == '7')
                 && !explorer.visitedLocations.Contains(southOption)
                 )
             {
@@ -203,7 +304,7 @@ namespace AoC2023.solution
                 //explorer.visitedLocations.ForEach(i => Console.Write("{0}\t", i));
 
 
-                if (map.getGridState(explorer.steps + 1, southOption) == 'L' || map.getGridState(explorer.steps + 1, southOption) == 'J' || map.getGridState(explorer.steps + 1, southOption) == '|')
+                if (map.getGridState(southOption) == 'L' || map.getGridState(southOption) == 'J' || map.getGridState(southOption) == '|')
                 {
                     //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
                     //tempList.Add(southOption);
@@ -219,15 +320,15 @@ namespace AoC2023.solution
 
             // Check North
             Position northOption = new Position(explorer.position.x - 1, explorer.position.y);
-            if (map.getGridState(explorer.steps + 1, northOption) != 'S' && map.getGridState(explorer.steps + 1, northOption) != '.'
-                && (map.getGridState(explorer.steps + 1, explorer.position) == 'S' || map.getGridState(explorer.steps + 1, explorer.position) == '|'
-                || map.getGridState(explorer.steps + 1, explorer.position) == 'J' || map.getGridState(explorer.steps + 1, explorer.position) == 'L')
+            if (map.getGridState(northOption) != 'S' && map.getGridState(northOption) != '.'
+                && (map.getGridState(explorer.position) == 'S' || map.getGridState(explorer.position) == '|'
+                || map.getGridState(explorer.position) == 'J' || map.getGridState(explorer.position) == 'L')
                 && !explorer.visitedLocations.Contains(northOption)
                 )
             {
                 //Console.WriteLine("hello");
                 //Console.WriteLine("north option :: " + explorer.position.x +","+ explorer.position.y + " :: " + northOption.x +", "+ northOption.y);
-                if (map.getGridState(explorer.steps + 1, northOption) == 'F' || map.getGridState(explorer.steps + 1, northOption) == '7' || map.getGridState(explorer.steps + 1, northOption) == '|')
+                if (map.getGridState(northOption) == 'F' || map.getGridState(northOption) == '7' || map.getGridState(northOption) == '|')
                 {
                     //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
                     //tempList.Add(northOption);
@@ -246,15 +347,15 @@ namespace AoC2023.solution
 
             // Check East
             Position eastOption = new Position(explorer.position.x, explorer.position.y + 1);
-            if (map.getGridState(explorer.steps + 1, eastOption) != 'S' && map.getGridState(explorer.steps + 1, eastOption) != '.'
-                && (map.getGridState(explorer.steps + 1, explorer.position) == 'S' || map.getGridState(explorer.steps + 1, explorer.position) == '-'
-                || map.getGridState(explorer.steps + 1, explorer.position) == 'L' || map.getGridState(explorer.steps + 1, explorer.position) == 'F')
+            if (map.getGridState(eastOption) != 'S' && map.getGridState(eastOption) != '.'
+                && (map.getGridState(explorer.position) == 'S' || map.getGridState(explorer.position) == '-'
+                || map.getGridState(explorer.position) == 'L' || map.getGridState(explorer.position) == 'F')
                 && !explorer.visitedLocations.Contains(eastOption)
                 )
             {
                 //Console.WriteLine("hello");
                 //Console.WriteLine("east option");
-                if (map.getGridState(explorer.steps + 1, eastOption) == '7' || map.getGridState(explorer.steps + 1, eastOption) == 'J' || map.getGridState(explorer.steps + 1, eastOption) == '-')
+                if (map.getGridState(eastOption) == '7' || map.getGridState(eastOption) == 'J' || map.getGridState(eastOption) == '-')
                 {
                     //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
                     //tempList.Add(eastOption);
@@ -270,14 +371,14 @@ namespace AoC2023.solution
 
             // Check West
             Position westOption = new Position(explorer.position.x, explorer.position.y - 1);
-            if (map.getGridState(explorer.steps + 1, westOption) != 'S' && map.getGridState(explorer.steps + 1, westOption) != '.'
-                && (map.getGridState(explorer.steps + 1, explorer.position) == 'S' || map.getGridState(explorer.steps + 1, explorer.position) == '-'
-                || map.getGridState(explorer.steps + 1, explorer.position) == 'J' || map.getGridState(explorer.steps + 1, explorer.position) == '7')
+            if (map.getGridState(westOption) != 'S' && map.getGridState(westOption) != '.'
+                && (map.getGridState(explorer.position) == 'S' || map.getGridState(explorer.position) == '-'
+                || map.getGridState(explorer.position) == 'J' || map.getGridState(explorer.position) == '7')
                 && !explorer.visitedLocations.Contains(westOption)
                 )
             {
                 //Console.WriteLine("hello");
-                if (map.getGridState(explorer.steps + 1, westOption) == 'L' || map.getGridState(explorer.steps + 1, westOption) == 'F' || map.getGridState(explorer.steps + 1, westOption) == '-')
+                if (map.getGridState(westOption) == 'L' || map.getGridState(westOption) == 'F' || map.getGridState(westOption) == '-')
                 {
                     //HashSet<Position> tempList = new HashSet<Position>(explorer.visitedLocations);
                     //tempList.Add(westOption);
@@ -296,7 +397,7 @@ namespace AoC2023.solution
 
         }
 
-        public string printGrid(string[,] grid, int xSize, int ySize)
+        public string printGrid(string[,] grid, int xSize, int ySize, HashSet<Position> pathtoTrack)
         {
             string output = "\nGrid:\n";
 
@@ -304,7 +405,18 @@ namespace AoC2023.solution
             {
                 for (int y = 0; y < ySize; y++)
                 {
-                    string toWrite = grid[x, y].ToString();
+                    Position checkPath = new Position(x, y);
+                    string toWrite = "";
+                    if (pathtoTrack.Contains(checkPath))
+                    {
+                        //toWrite = "\x1b[1m" + grid[x, y].ToString()+ "\x1b[0m";
+                        toWrite = "\x1b[1mX\x1b[0m";
+
+                    } else
+                    {
+                        toWrite = grid[x, y].ToString();
+                    }
+                    
                     //System.Console.WriteLine(toWrite);
 
                     output += " " + toWrite;
