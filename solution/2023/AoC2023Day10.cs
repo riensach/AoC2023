@@ -106,6 +106,7 @@ namespace AoC2023.solution
                 
 
             }
+            pathtoTrack.Add(new Position(startingLocationX, startingLocationY));
 
             //int highestSteps = shortestPathOptions.Values.Max();
 
@@ -113,7 +114,8 @@ namespace AoC2023.solution
 
             output += "Part A: " + shortestPath;
 
-            HashSet<Position> possibleCagesList = new HashSet<Position>(possiblePositions.Except(pathtoTrack));
+            HashSet<Position> possibleCagesList = new HashSet<Position>(allPositions.Except(pathtoTrack));
+            //possibleCagesList.ForEach(i => Console.Write("{0}\t", i));
 
             foreach (Position possCage in possibleCagesList)
             {
@@ -154,8 +156,10 @@ namespace AoC2023.solution
                     }
                 }
 
-                //Console.WriteLine("Location "+possCage.x+","+ possCage.y+" crosses the path the following times. East:"+ eastCount+", West:" + westCount + ", North:" + northCount + ", South:"+ southCount);
-                if ((eastCount % 2 != 0) && (westCount % 2 != 0) && (southCount % 2 != 0) && (northCount % 2 != 0))
+                Console.WriteLine("Location "+possCage.x+","+ possCage.y+" crosses the path the following times. East:"+ eastCount+", West:" + westCount + ", North:" + northCount + ", South:"+ southCount);
+                if (westCount % 2 == 1)
+                //if (eastCount + westCount + southCount + northCount % 2 == 1)
+                //if ((eastCount % 2 != 0) && (westCount % 2 != 0) && (southCount % 2 != 0) && (northCount % 2 != 0))
                 {
                     Console.WriteLine("Location " + possCage.x + "," + possCage.y + " is containted!");
                     enclosedCount++;
@@ -271,6 +275,7 @@ namespace AoC2023.solution
             // 57 is wrong
             // 56 is wrong
             // 55 is wrong
+            // 54 is wrong
             //Console.WriteLine("Returning");
             return explorerInformation with
             {
