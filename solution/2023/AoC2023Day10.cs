@@ -115,6 +115,7 @@ namespace AoC2023.solution
             output += "Part A: " + shortestPath;
 
             HashSet<Position> possibleCagesList = new HashSet<Position>(allPositions.Except(pathtoTrack));
+            HashSet<Position> theLoop = new HashSet<Position>(allPositions.Except(possibleCagesList));
             //possibleCagesList.ForEach(i => Console.Write("{0}\t", i));
 
             foreach (Position possCage in possibleCagesList)
@@ -123,10 +124,11 @@ namespace AoC2023.solution
                 int southCount = 0;
                 int eastCount = 0;
                 int westCount = 0;
+                if(possCage.x ==0 || possCage.x == arrayLength-1 || possCage.y == 0 || possCage.y == arrayWidth - 1) continue;
                 for (int i = 1; i+ possCage.x < arrayLength; i++)
                 {
                     Position southOption = new Position(possCage.x + i, possCage.y);
-                    if (pathtoTrack.Contains(southOption))
+                    if (theLoop.Contains(southOption))
                     {
                         southCount++;
                     }
@@ -134,7 +136,7 @@ namespace AoC2023.solution
                 for (int i = 1; possCage.x - i >= 0; i++)
                 {
                     Position northOption = new Position(possCage.x - i, possCage.y);
-                    if (pathtoTrack.Contains(northOption))
+                    if (theLoop.Contains(northOption))
                     {
                         northCount++;
                     }
@@ -142,7 +144,7 @@ namespace AoC2023.solution
                 for (int i = 1; i + possCage.y < arrayWidth; i++)
                 {
                     Position eastOption = new Position(possCage.x, possCage.y + i);
-                    if (pathtoTrack.Contains(eastOption))
+                    if (theLoop.Contains(eastOption))
                     {
                         eastCount++;
                     }
@@ -150,16 +152,18 @@ namespace AoC2023.solution
                 for (int i = 1; possCage.y - i >= 0; i++)
                 {
                     Position westOption = new Position(possCage.x, possCage.y - i);
-                    if(pathtoTrack.Contains(westOption))
+                    if(theLoop.Contains(westOption) && (grid[possCage.x,possCage.y - i] == "S" || grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "|"))
                     {
                         westCount++;
                     }
                 }
 
                 Console.WriteLine("Location "+possCage.x+","+ possCage.y+" crosses the path the following times. East:"+ eastCount+", West:" + westCount + ", North:" + northCount + ", South:"+ southCount);
-                if (westCount % 2 == 1)
+                if (westCount % 2 == 1 && westCount > 0)
                 //if (eastCount + westCount + southCount + northCount % 2 == 1)
-                //if ((eastCount % 2 != 0) && (westCount % 2 != 0) && (southCount % 2 != 0) && (northCount % 2 != 0))
+                //if ((eastCount < 1 || eastCount % 2 == 1) && (westCount < 1 || westCount % 2 ==1) && (southCount < 1 || southCount % 2 == 1) && (northCount < 1 || northCount % 2 == 1))
+               // int totalCrosses = eastCount + westCount + southCount + northCount;
+                //if ((totalCrosses % 2 == 1) && (eastCount > 0) && (westCount > 0) && (southCount >0) && (northCount >0))
                 {
                     Console.WriteLine("Location " + possCage.x + "," + possCage.y + " is containted!");
                     enclosedCount++;
@@ -171,7 +175,7 @@ namespace AoC2023.solution
 
             output += "\nPart B: " + enclosedCount;
 
-            string theGrid = printGrid(grid, arrayLength, arrayWidth, pathtoTrack);
+            string theGrid = printGrid(grid, arrayLength, arrayWidth, possibleCagesList);
             Console.WriteLine(theGrid);
 
 
