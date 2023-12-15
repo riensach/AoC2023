@@ -115,6 +115,8 @@ namespace AoC2023.solution
             output += "Part A: " + shortestPath;
 
             HashSet<Position> possibleCagesList = new HashSet<Position>(allPositions.Except(pathtoTrack));
+
+            HashSet<Position> cageList = new HashSet<Position>();
             HashSet<Position> theLoop = new HashSet<Position>(allPositions.Except(possibleCagesList));
             //possibleCagesList.ForEach(i => Console.Write("{0}\t", i));
 
@@ -176,6 +178,8 @@ namespace AoC2023.solution
                 //if ((totalCrosses % 2 == 1) && (eastCount > 0) && (westCount > 0) && (southCount >0) && (northCount >0))
                 {
                     Console.WriteLine("Location " + possCage.x + "," + possCage.y + " is containted!");
+                    Position caged = new Position(possCage.x, possCage.y);
+                    cageList.Add(caged);
                     enclosedCount++;
                 }
                 
@@ -183,11 +187,12 @@ namespace AoC2023.solution
             }
 
             // 375 is wrong
+            // 372 is wrong
             // 384 is wrong
 
             output += "\nPart B: " + enclosedCount;
 
-            string theGrid = printGrid(grid, arrayLength, arrayWidth, possibleCagesList);
+            string theGrid = printGrid(grid, arrayLength, arrayWidth, possibleCagesList, cageList);
             Console.WriteLine(theGrid);
 
 
@@ -418,7 +423,7 @@ namespace AoC2023.solution
 
         }
 
-        public string printGrid(string[,] grid, int xSize, int ySize, HashSet<Position> pathtoTrack)
+        public string printGrid(string[,] grid, int xSize, int ySize, HashSet<Position> pathtoTrack, HashSet<Position> caged)
         {
             string output = "\nGrid:\n";
 
@@ -428,7 +433,9 @@ namespace AoC2023.solution
                 {
                     Position checkPath = new Position(x, y);
                     string toWrite = "";
-                    if (pathtoTrack.Contains(checkPath))
+                    if (caged.Contains(checkPath)) {
+                        toWrite = "\x1b[1mI\x1b[0m";
+                    } else if (pathtoTrack.Contains(checkPath))
                     {
                         //toWrite = "\x1b[1m" + grid[x, y].ToString()+ "\x1b[0m";
                         toWrite = "\x1b[1mX\x1b[0m";
