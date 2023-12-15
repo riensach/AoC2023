@@ -202,10 +202,37 @@ namespace AoC2023.solution
 
 
 
+            row = 0;
+            column = 0;
+            int enclosedLocationsSecond = 0;
+            foreach (string line in lines)
+            {
+                int crossedWalls = 0;
+                foreach (var character in line)
+                { // "|JL"
+                    
+                    Position locationPos = new Position(row, column);
+                    //Console.WriteLine("Checking "+row+","+column);
+                    //Console.WriteLine(theLoop.Contains(locationPos));
+                    if (theLoop.Contains(locationPos) && (grid[row, column] == "J" || grid[row, column] == "L" || grid[row, column] == "|" || grid[row, column] == "S"))
+                    {
+                        crossedWalls++;
+                    } else if(cageList.Contains(locationPos) && crossedWalls % 2 == 1)
+                    {
+                        enclosedLocationsSecond++;
+                        Console.WriteLine("Checking " + row + "," + column); 
+                        Console.WriteLine("LOCKED IN");
+                    }
+                    int mathsAns = crossedWalls % 2;
+                    //Console.WriteLine(mathsAns);
+                    //Console.WriteLine("CROSSED WALLS " + crossedWalls);
+                    column++;
+                }
+                row++;
+                column = 0;
+            }
 
-
-
-
+            output += "\nPart B2: " + enclosedLocationsSecond;
 
 
 
