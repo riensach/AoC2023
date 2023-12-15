@@ -151,20 +151,20 @@ namespace AoC2023.solution
                         eastCount++;
                     }
                 }
-                for (int i = 1; possCage.y - i >= 0; i++)
+                for (int i = 1; possCage.y - i > 0; i++)
                 {
                     Position westOption = new Position(possCage.x, possCage.y - i);
                     //if(theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "|"))
-                    if (theLoop.Contains(westOption) && grid[possCage.x,possCage.y - i] == "S")
+                    if (!possibleCagesList.Contains(westOption) && grid[possCage.x,possCage.y - i] == "S")
                     {
                         westCount++;
-                    } else if (theLoop.Contains(westOption) && grid[possCage.x, possCage.y - i] == "|") {
+                    } else if (!possibleCagesList.Contains(westOption) && grid[possCage.x, possCage.y - i] == "|") {
                         westCount++;
 
-                    } else if (theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "7" )) {
+                    } else if (!possibleCagesList.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "7" )) {
                         westCount = westCount + 0.5;
                     }
-                    else if (theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "F"))
+                    else if (!possibleCagesList.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "F"))
                     {
                         westCount = westCount - 0.5;
                     }
@@ -189,6 +189,7 @@ namespace AoC2023.solution
             // 375 is wrong
             // 372 is wrong
             // 384 is wrong
+            // 364 is wrong
 
             output += "\nPart B: " + enclosedCount;
 
