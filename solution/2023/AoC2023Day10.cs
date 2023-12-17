@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using Windows.UI.StartScreen;
 using System.Collections.Generic;
+using System.Threading.Tasks.Dataflow;
 
 namespace AoC2023.solution
 {
@@ -118,6 +119,10 @@ namespace AoC2023.solution
 
             HashSet<Position> cageList = new HashSet<Position>();
             HashSet<Position> theLoop = new HashSet<Position>(allPositions.Except(possibleCagesList));
+            foreach(Position pos in possibleCagesList)
+            {
+                grid[pos.x, pos.y] = ".";
+            }
             //possibleCagesList.ForEach(i => Console.Write("{0}\t", i));
 
             foreach (Position possCage in possibleCagesList)
@@ -155,16 +160,16 @@ namespace AoC2023.solution
                 {
                     Position westOption = new Position(possCage.x, possCage.y - i);
                     //if(theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "|"))
-                    if (!possibleCagesList.Contains(westOption) && grid[possCage.x,possCage.y - i] == "S")
+                    if (theLoop.Contains(westOption) && grid[possCage.x,possCage.y - i] == "S")
                     {
                         westCount++;
-                    } else if (!possibleCagesList.Contains(westOption) && grid[possCage.x, possCage.y - i] == "|") {
+                    } else if (theLoop.Contains(westOption) && grid[possCage.x, possCage.y - i] == "|") {
                         westCount++;
 
-                    } else if (!possibleCagesList.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "7" )) {
+                    } else if (theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "L" || grid[possCage.x, possCage.y - i] == "7" )) {
                         westCount = westCount + 0.5;
                     }
-                    else if (!possibleCagesList.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "F"))
+                    else if (theLoop.Contains(westOption) && (grid[possCage.x, possCage.y - i] == "J" || grid[possCage.x, possCage.y - i] == "F"))
                     {
                         westCount = westCount - 0.5;
                     }
@@ -190,6 +195,7 @@ namespace AoC2023.solution
             // 372 is wrong
             // 384 is wrong
             // 364 is wrong
+            // 367
 
             output += "\nPart B: " + enclosedCount;
 

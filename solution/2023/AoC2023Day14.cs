@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Diagnostics;
+using System.Data.Common;
 
 namespace AoC2023.solution
 {
@@ -14,128 +15,242 @@ namespace AoC2023.solution
     public class AoCDay14
     {
         public string[,] grid;
+        int arrayLength = 0;
+        int arrayWidth = 0;
         public AoCDay14(int selectedPart, string input)
         {
             string[] lines = input.Split(
                 new string[] { Environment.NewLine },
                 StringSplitOptions.None
             );
+            arrayLength = lines.Count();
+            arrayWidth = lines[0].Length;
 
-            int arrayLength = 1400;
-            int arrayWidth = 1400;
-            int lowestMountain = 0;
             grid = new string[arrayLength, arrayWidth];
-            createGrid(arrayLength, arrayWidth);
-
-
+            grid = createGrid(grid, arrayLength, arrayWidth);
+            int row = 0;
+            int column = 0;
             foreach (string line in lines)
             {
-                string[] moves = line.Split(" -> ");
-                int startX = 0;
-                int startY = 0;
-                foreach (string move in moves)
+                foreach (var character in line)
                 {
-                    string[] coords = move.Split(",");
-
-                    if (startX == 0)
-                    {
-                        startX = Int32.Parse(coords[1]);
-                        startY = Int32.Parse(coords[0]);
-                    } else
-                    {
-
-                        if(startX > Int32.Parse(coords[1]))
-                        {
-                            for (int x = Int32.Parse(coords[1]); x <= startX; x++)
-                            {
-                                grid[x, startY] = "#";
-                            }
-
-                        } else if (startX < Int32.Parse(coords[1]))
-                        {
-                            for (int x = startX; x <= Int32.Parse(coords[1]); x++)
-                            {
-                                grid[x, startY] = "#";
-                            }
-                        }
-                        else if (startY > Int32.Parse(coords[0]))
-                        {
-                            for (int y = Int32.Parse(coords[0]); y <= startY; y++)
-                            {
-                                grid[startX, y] = "#";
-                            }
-                        } else
-                        {
-                            for (int y = startY; y <= Int32.Parse(coords[0]); y++)
-                            {
-                                grid[startX, y] = "#";
-                            }
-                        }
-                                              
-                        if (lowestMountain < Int32.Parse(coords[1]))
-                        {
-                            lowestMountain = Int32.Parse(coords[1]);
-                        }
-                        startX = Int32.Parse(coords[1]);
-                        startY = Int32.Parse(coords[0]);
-                    }
-                    
+                    grid[row, column] = character.ToString();
+                    column++;
                 }
+                row++;
+                column = 0;
             }
-            lowestMountain = lowestMountain + 1;
-            Console.WriteLine(lowestMountain);
-
-            bool voided = false;
-            int totalSandUnits = 0;
-            while (voided == false)
+            bool stoppedMoving = false;
+            while(stoppedMoving == false)
             {
-                int sandX = 0;
-                int sandY = 500;
-                bool settled = false;
-                while (settled == false)
+                stoppedMoving = true;
+                // NORTH
+                for (int x = 1; x < arrayLength; x++)
                 {
-                    if (sandX == lowestMountain)
+                    for (int y = 0; y < arrayWidth; y++)
                     {
-                        //voided = true;
-                        //break;
-                        grid[sandX, sandY] = "o";
-                        totalSandUnits++;
-                        settled = true;
+                        if (grid[x,y] == "O" && grid[x - 1, y] == ".")
+                        {
+                            grid[x - 1, y] = "O";
+                            grid[x, y] = ".";
+                            stoppedMoving = false;
+                        }
                     }
-                    if(grid[0, 500] == "o")
-                    {
-                        voided = true;
-                        break;
-                    }
-                    if (grid[sandX + 1, sandY] == ".")
-                    {
-                        sandX++;
-                        continue;
-                    } else if (grid[sandX + 1, sandY - 1] == ".")
-                    {
-                        sandX++;
-                        sandY--;
-                        continue;
-                    }
-                    else if (grid[sandX + 1, sandY + 1] == ".")
-                    {
-                        sandX++;
-                        sandY++;
-                        continue;
-                    } else
-                    {
-                        grid[sandX, sandY] = "o";
-                        totalSandUnits++;
-                        settled = true;
-                    }
-                    
                 }
-                    
+                
+            }
+            int totalLoad = 0;
+            for (int x = 0; x < arrayLength; x++)
+            {
+                for (int y = 0; y < arrayWidth; y++)
+                {
+                    if (grid[x, y] == "O")
+                    {
+                        totalLoad = totalLoad + arrayWidth - x;
+                    }
+                }
             }
 
 
 
-            output = "Part A:"+totalSandUnits;
+            output = "Part A:"+ totalLoad;
+            string outputGrid = printGrid(arrayLength, arrayWidth);
+            output += outputGrid;
+
+
+            grid = new string[arrayLength, arrayWidth];
+            grid = createGrid(grid, arrayLength, arrayWidth);
+            row = 0;
+            column = 0;
+            foreach (string line in lines)
+            {
+                foreach (var character in line)
+                {
+                    grid[row, column] = character.ToString();
+                    column++;
+                }
+                row++;
+                column = 0;
+            }
+            outputGrid = printGrid(arrayLength, arrayWidth);
+            output += outputGrid;
+            stoppedMoving = false;
+
+            Dictionary<int, int> previousScores = new Dictionary<int, int>();
+
+
+
+
+            int iterationToEnd = 1000000000;
+            for (int i = 0; i < 1000000000; i++)
+            {
+                if(i % 10000000 == 0)
+                {
+                    Console.WriteLine("Completed " + i + " cycles.");
+                }
+                stoppedMoving = false;
+                while (stoppedMoving == false)
+                {
+                    stoppedMoving = true;
+                    // NORTH
+                    for (int x = 1; x < arrayLength; x++)
+                    {
+                        for (int y = 0; y < arrayWidth; y++)
+                        {
+                            if (grid[x, y] == "O" && grid[x - 1, y] == ".")
+                            {
+                                grid[x - 1, y] = "O";
+                                grid[x, y] = ".";
+                                stoppedMoving = false;
+                            }
+                        }
+                    }
+
+                }
+                stoppedMoving = false;
+                while (stoppedMoving == false)
+                {
+                    stoppedMoving = true;
+                    // WEST
+                    for (int x = 0; x < arrayLength; x++)
+                    {
+                        for (int y = 1; y < arrayWidth; y++)
+                        {
+                            if (grid[x, y] == "O" && grid[x, y - 1] == ".")
+                            {
+                                grid[x, y - 1] = "O";
+                                grid[x, y] = ".";
+                                stoppedMoving = false;
+                            }
+                        }
+                    }
+                }
+                stoppedMoving = false;
+                while (stoppedMoving == false)
+                {
+                    stoppedMoving = true;
+                    // SOUTH
+                    for (int x = 0; x < arrayLength - 1; x++)
+                    {
+                        for (int y = 0; y < arrayWidth; y++)
+                        {
+                            if (grid[x, y] == "O" && grid[x + 1, y] == ".")
+                            {
+                                grid[x + 1, y] = "O";
+                                grid[x, y] = ".";
+                                stoppedMoving = false;
+                            }
+                        }
+                    }
+                }
+                stoppedMoving = false;
+                while (stoppedMoving == false)
+                {
+                    stoppedMoving = true;
+                    // EAST
+                    for (int x = 0; x < arrayLength; x++)
+                    {
+                        for (int y = 0; y < arrayWidth - 1; y++)
+                        {
+                            if (grid[x, y] == "O" && grid[x, y + 1] == ".")
+                            {
+                                grid[x, y + 1] = "O";
+                                grid[x, y] = ".";
+                                stoppedMoving = false;
+                            }
+                        }
+                    }
+                }
+
+                totalLoad = 0;
+                for (int x = 0; x < arrayLength; x++)
+                {
+                    for (int y = 0; y < arrayWidth; y++)
+                    {
+                        if (grid[x, y] == "O")
+                        {
+                            totalLoad = totalLoad + arrayWidth - x;
+                        }
+                    }
+                }
+                if(!previousScores.ContainsKey(totalLoad))
+                {
+                    previousScores.Add(totalLoad, i);
+                } else
+                {
+                    int previousIndexValue = previousScores[totalLoad];
+                    int iterationDiff = i - previousIndexValue;
+                    iterationToEnd = previousIndexValue + ((1000000000 - previousIndexValue) % iterationDiff) + (i - iterationDiff);
+                    //iterationToEnd = (1000000000 % i) + i;
+                    Console.WriteLine("Repeat at iteratiion " + i + " with score " + totalLoad + " previously found at "+ previousIndexValue+" so break at " +iterationToEnd);
+                    
+                }
+                if (i <10000) continue;
+                if(i % 10000 == 1)
+                // 112 repeating pattern, after 176
+                // 190 = 204 = 218
+                // 200 103867
+                // 300 103878
+                // 400 103856
+                // 500 103857
+                // 600 103863
+                // 700 103860
+                // 800 103845
+                // 900 103867
+                //1000 103878
+                //1100 103856
+                //2000 103863
+                //3000 103867
+                //4000 103857
+                //5000 103845
+                //6000 103856
+                //7000 103860
+                // 103861 correct answer
+                //if(i == iterationToEnd)
+                {
+                    // We've got to the end of where we need to get to after out pattern
+                    Console.WriteLine("Breaking at " + i);
+                    break;
+                }
+
+
+            }
+            totalLoad = 0;
+            for (int x = 0; x < arrayLength; x++)
+            {
+                for (int y = 0; y < arrayWidth; y++)
+                {
+                    if (grid[x, y] == "O")
+                    {
+                        totalLoad = totalLoad + arrayWidth - x;
+                    }
+                }
+            }
+            // 64
+
+            outputGrid = printGrid(arrayLength, arrayWidth);
+            output += outputGrid;
+            output += "Part B:" + totalLoad;
 
         }
 
@@ -161,7 +276,7 @@ namespace AoC2023.solution
             return output;
         }
 
-        public void createGrid(int xSize, int ySize)
+        public string[,] createGrid(string[,] grid, int xSize, int ySize)
         {
 
             for (int x = 0; x < xSize; x++)
@@ -172,6 +287,7 @@ namespace AoC2023.solution
                 }
             }
 
+            return grid;
         }
 
         public string output;

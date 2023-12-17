@@ -5,14 +5,15 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.ComponentModel;
+using ABI.Windows.ApplicationModel;
 
 namespace AoC2023.solution
 {
     public class AoCDay16
     {
-        private IDictionary<string, int> valvesFlowRate = new Dictionary<string, int>();
-        private IDictionary<string, List<string>> valvesTunnels = new Dictionary<string, List<string>>();
-        private IDictionary<string, int> valves = new Dictionary<string, int>();
+        public string[,] grid;
+        int arrayLength = 0;
+        int arrayWidth = 0;
 
         public AoCDay16(int selectedPart, string input)
         {
@@ -20,267 +21,475 @@ namespace AoC2023.solution
                 new string[] { Environment.NewLine },
                 StringSplitOptions.None
             );
+            arrayLength = lines.Count();
+            arrayWidth = lines[0].Length;
 
-
-            int maximumValves = 0;
+            grid = new string[arrayLength, arrayWidth];
+            grid = createGrid(grid, arrayLength, arrayWidth);
+            int row = 0;
+            int column = 0;
             foreach (string line in lines)
             {
-                string inputString = line.Replace(" tunnels lead to valves ", "");
-                inputString = inputString.Replace(" has flow rate", "");
-                inputString = inputString.Replace(" tunnel leads to valve ", "");
-                inputString = inputString.Replace("Valve ", "");
-                string[] parts = inputString.Split(";");
-                string[] firstPart = parts[0].Split("=");
-                string[] secondPart = parts[1].Split(", ");
-                string valve = firstPart[0];
-                string flowRate = firstPart[1];
-                if(Int32.Parse(flowRate) > 0)
+                foreach (var character in line)
                 {
-                    maximumValves++;
+                    grid[row, column] = character.ToString();
+                    column++;
                 }
-                List<string> tunnels = new List<string>();
-                foreach (string valves in secondPart)
-                {
-                    tunnels.Add(valves);
-                }
-                Console.Write("Value " + valve + " with flow rate " + flowRate + " has tunnels leading to ");
-                for (int i = 0; i < tunnels.Count; i++)
-                {
-                    Console.Write(tunnels[i] + " ");
-                    if (!valves.ContainsKey(tunnels[i]))
-                    {
-                        valves.Add(tunnels[i], 0);
-                    }
-
-                }
-                Console.Write("\n");
-                valvesFlowRate.Add(valve, Int32.Parse(flowRate));
-                valvesTunnels.Add(valve, tunnels);
+                row++;
+                column = 0;
             }
 
-            Random rand = new Random();
-            int[] minutes = new int[] {30, 26};
-            string[] puzzleParts = new string[] {"A", "B"};
-            int maximumLength = (maximumValves) + (maximumValves * 2);
-            Console.WriteLine("Maximum length: "+ maximumLength);
+            Dictionary<int, string> beams = new Dictionary<int, string>();
+            HashSet<string> energizedTiles = new HashSet<string>();
+            beams.Add(0, "0,-1,>");
+            int currentKey = 0;
 
-            for (int h = 0; h < 2; h++)
+            for (int i = 0; i < 700; i++)
             {
-                int pressureReleased = 0;
-                int startingPressureReleased = 0;
-                int startingMinute = 1;
-                int MaximumPressureReleasedHistory = 0;
-                string startingValve = "AA";
-                string openedValvesStart = "";
-                valveObject startingValveObject = new valveObject(openedValvesStart, startingValve, startingMinute, startingPressureReleased, startingValve);
-                Queue<valveObject> queue = new Queue<valveObject>();
-
-                int maximumMinutes = minutes[h];                
-
-                queue.Enqueue(startingValveObject);
-                do
+                //Console.WriteLine("Beams: " + beams.Count + " iterations:" + i);
+                if (beams.Count < 1)
                 {
-                    // Queue
-                    valveObject currentItem = queue.Dequeue();
-                    int currentMinute = currentItem.currentMinute;
-                    int maximumPressureReleased = currentItem.currentPressureReleased;
-                    string currentValveFirst = currentItem.currentValue;
-                    string currentValveSecond = currentItem.currentValueSecond;
-                    bool isValveOpenFirst = currentItem.openedValves.Contains(currentValveFirst);
-                    bool isValveOpenSecond = currentItem.openedValves.Contains(currentValveSecond);
-                    int optionCountFirst = valvesTunnels[currentValveFirst].Count();
-                    int optionCountSecond = valvesTunnels[currentValveSecond].Count();
-                    int currentFlowRateFirst = valvesFlowRate[currentValveFirst];
-                    int currentFlowRateSecond = valvesFlowRate[currentValveSecond];
+                    break;
+                    // All beams are done for
+                }
+                
+                
+                Dictionary<int, string> beamsCopy = new Dictionary<int, string>(beams);
+                //Dictionary<int, string> beamsCopy = new Dictionary<int, string>(beams);
+                foreach (KeyValuePair<int, string> beam in beams)
+                {
+                    string[] beamDetails = beam.Value.Split(",");
+                    int x = int.Parse(beamDetails[0]);
+                    int y = int.Parse(beamDetails[1]);
+                    if (!energizedTiles.Contains(x + "," + y))
+                    {
+                        energizedTiles.Add(x + "," + y);
+                    }
+                    string direction = beamDetails[2];
+                    string destGridValue = "";
+                    //Console.WriteLine(x+","+y);
+                    if (direction == ">")
+                    {
+                        if (y + 1 > arrayWidth - 1)
+                        {
+                            // Time to remove the beam                            
+                            beamsCopy.Remove(beam.Key);                            
+                            continue;
+                        }
+                        destGridValue = grid[x, y + 1];
+                        int newY = y + 1;
+                        if (destGridValue == "." || destGridValue == "-")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + direction;
+                        }
+                        else if (destGridValue == "/")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                        }
+                        else if (destGridValue == "\\")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "V";
+                        }
+                        else if (destGridValue == "|")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                            int newIndex = currentKey + 1;
+                            currentKey++;
+                            beamsCopy.Add(newIndex, x + "," + newY + "," + "V");
+                        }
+                    } else if (direction == "<")
+                    {
+                        if (y - 1 < 0)
+                        {
+                            // Time to remove the beam
+                            beamsCopy.Remove(beam.Key);
+                            continue;
+                        }
+                        destGridValue = grid[x, y - 1];
+                        int newY = y - 1;
+                        if (destGridValue == "." || destGridValue == "-")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + direction;
+                        }
+                        else if (destGridValue == "/")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "V";
+                        }
+                        else if (destGridValue == "\\")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                        }
+                        else if (destGridValue == "|")
+                        {
+                            beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                            int newIndex = currentKey + 1;
+                            currentKey++;
+                            beamsCopy.Add(newIndex, x + "," + newY + "," + "V");
+                        }
+                    }
+                    else if (direction == "^")
+                    {
+                        if (x - 1 < 0)
+                        {
+                            // Time to remove the beam
+                            beamsCopy.Remove(beam.Key);
+                            continue;
+                        }
+                        destGridValue = grid[x - 1, y];
+                        int newX = x - 1;
+                        if (destGridValue == "." || destGridValue == "|")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + direction;
+                        }
+                        else if (destGridValue == "/")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                        }
+                        else if (destGridValue == "\\")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + "<";
+                        }
+                        else if (destGridValue == "-")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                            int newIndex = currentKey + 1;
+                            currentKey++;
+                            beamsCopy.Add(newIndex, newX + "," + y + "," + "<");
+                        }
+                    }
+                    else if (direction == "V")
+                    {
+                        if (x + 1 > arrayLength - 1)
+                        {
+                            // Time to remove the beam
+                            beamsCopy.Remove(beam.Key);
+                            continue;
+                        }
+                        destGridValue = grid[x + 1, y];
+                        int newX = x + 1;
+                        if (destGridValue == "." || destGridValue == "|")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + direction;
+                        } else if (destGridValue == "/")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + "<";
+                        }
+                        else if (destGridValue == "\\")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                        }
+                        else if (destGridValue == "-")
+                        {
+                            beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                            int newIndex = currentKey + 1;
+                            currentKey++;
+                            beamsCopy.Add(newIndex, newX + "," + y + "," + "<");
+                        }
+                    }
 
-                    if (currentMinute > maximumMinutes)
+                }
+                //Console.WriteLine("got here");
+                beams.Clear();
+                beams = new Dictionary<int, string>(beamsCopy);
+                beams = beams.GroupBy(pair => pair.Value)
+                         .Select(group => group.First())
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+                //beamsCopy.Clear();
+            }
+
+            int bamCount = beams.Count(f => f.Value == "49,42,V");
+            // 
+            Console.WriteLine("Total beams left: " + beams.Count() + " - " + bamCount);
+            //return;
+            
+
+            int energyTiles = energizedTiles.Count() - 1;
+            // 1699 too low
+            // 7488
+            // 7495
+            // 7496 correct
+
+
+            output = "Part A:" + energyTiles;
+            //return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Dictionary<string, int> diffStartingBeams = new Dictionary<string, int>();
+            row = 0;
+            for (int x = 0; x < arrayLength; x++)
+            {
+                for (int y = 0; y < arrayWidth; y++)
+                {
+                    if(x == 0)
                     {
-                        continue;
-                    }
-                    if (maximumPressureReleased > pressureReleased)
+                        diffStartingBeams.Add("-1," + y +",V", 0);
+                    } else if (x == arrayLength - 1)
                     {
-                        pressureReleased = maximumPressureReleased;
+                        diffStartingBeams.Add(arrayLength + "," + y + ",^", 0);
                     }
-                    if (maximumPressureReleased > MaximumPressureReleasedHistory)
+                    else if (y == 0)
                     {
-                        MaximumPressureReleasedHistory = maximumPressureReleased;
+                        diffStartingBeams.Add(x + ",-1,>", 0);
                     }
-                    if (currentMinute > maximumMinutes)
+                    else if (y == arrayWidth - 1)
+                    {
+                        diffStartingBeams.Add(x + ","+ arrayLength+",<", 0);
+                    }
+                }
+            }
+            
+            diffStartingBeams.Add("0,-1,>", 0);
+            //diffStartingBeams.Add("-1,0,V", 0);
+            //diffStartingBeams.Add(arrayLength-1+",-1,<", 0);
+            //diffStartingBeams.Add("0,"+ arrayWidth - 1 + ",^", 0);
+
+            //diffStartingBeams.Add("0,-1,>", 0);
+            //diffStartingBeams.Add("0,-1,>", 0);
+            foreach (KeyValuePair<string, int> mainBeam in diffStartingBeams)
+            {
+                //Console.WriteLine("Looking at location string: "+ mainBeam.Key);
+                
+            }
+            //return;
+
+            foreach (KeyValuePair<string, int> mainBeam in diffStartingBeams)
+            {
+                Console.WriteLine("Attempting beam starting location: " + mainBeam.Key);
+                Dictionary<int, string> beamsIt = new Dictionary<int, string>();
+                HashSet<string> energizedTilesIt = new HashSet<string>();
+                beamsIt.Add(0, mainBeam.Key);
+                currentKey = 0;
+
+                for (int i = 0; i < 670; i++)
+                {
+                    //Console.WriteLine("Beams: " + beamsIt.Count + " iterations:" + i);
+                    if (beamsIt.Count < 1)
                     {
                         break;
+                        // All beams are done for
                     }
-                    if (currentMinute > 6 && maximumPressureReleased < 1)
+                    
+                    Dictionary<int, string> beamsCopy = new Dictionary<int, string>(beamsIt);
+                    //Dictionary<int, string> beamsCopy = new Dictionary<int, string>(beamsIt);
+                    foreach (KeyValuePair<int, string> beam in beamsIt)
                     {
-                        // After 12 steps we have no pressure, so no need to go further
-                        continue;
-                    }
-                    if (currentMinute > 7 && maximumPressureReleased < (MaximumPressureReleasedHistory - 1000))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentMinute > 8 && maximumPressureReleased < (MaximumPressureReleasedHistory - 500))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentMinute > 9 && maximumPressureReleased < (MaximumPressureReleasedHistory - 100))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentMinute > 12 && maximumPressureReleased < (MaximumPressureReleasedHistory - 50))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentMinute > 14 && maximumPressureReleased < (MaximumPressureReleasedHistory - 50))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentMinute > 18 && maximumPressureReleased < (MaximumPressureReleasedHistory - 50))
-                    {
-                        // We've released more pressure before, no need to go down this track
-                        continue;
-                    }
-                    if (currentItem.openedValves.Length == maximumLength)
-                    {
-                        // All the valves are open
-                        continue;
-                    }
-                    if (h == 0)
-                    {
-                        // Part A
-                        for (int i = 0; i < optionCountFirst; i++)
-                        {
-                            string currentValveMovedTo = valvesTunnels[currentValveFirst][i];
-                            string copyOfValves = currentItem.openedValves;
-                            valveObject newValveObject = new valveObject(copyOfValves, currentValveMovedTo, currentMinute + 1, maximumPressureReleased, currentValveSecond);
-                            queue.Enqueue(newValveObject);
-                        }
+                        string[] beamDetails = beam.Value.Split(",");
+                        int x = int.Parse(beamDetails[0]);
+                        int y = int.Parse(beamDetails[1]);
 
-                        if (currentFlowRateFirst > 0 && !isValveOpenFirst)
-                        {
-                            // We can open the valve, it's not open
-                            int pressureToRelease = (currentFlowRateFirst * (maximumMinutes - currentMinute));
-                            int NewmaximumPressureReleased = maximumPressureReleased + pressureToRelease;
-                            valveObject newValveObject = new valveObject(currentItem.openedValves + ":" + currentValveFirst, currentValveFirst, currentMinute + 1, NewmaximumPressureReleased, currentValveSecond);
-                            queue.Enqueue(newValveObject);
 
+
+
+
+
+
+
+                        
+                        if (!energizedTilesIt.Contains(x + "," + y))
+                        {
+                            energizedTilesIt.Add(x + "," + y);
                         }
-                    } else
-                    {
-                        if(currentMinute > 8)
+                        string direction = beamDetails[2];
+                        string destGridValue = "";
+                        //Console.WriteLine(x+","+y);
+                        if (direction == ">")
                         {
-                            Queue<valveObject> queue2 = new Queue<valveObject>(queue.Distinct());
-                            queue = queue2;
-                        }
-                        if(currentFlowRateFirst > 0 && currentFlowRateSecond > 0 && !isValveOpenFirst && !isValveOpenSecond && currentValveFirst != currentValveSecond)
-                        {
-                            // Option to open both valves - simples
-                            int pressureToReleaseFirst = (currentFlowRateFirst * (maximumMinutes - currentMinute));
-                            int pressureToReleaseSecond = (currentFlowRateSecond * (maximumMinutes - currentMinute));
-                            int NewmaximumPressureReleased = maximumPressureReleased + pressureToReleaseFirst + pressureToReleaseSecond;
-                            valveObject newValveObject = new valveObject(currentItem.openedValves + ":" + currentValveFirst + ":" + currentValveSecond, currentValveFirst, currentMinute + 1, NewmaximumPressureReleased, currentValveSecond);
-                            queue.Enqueue(newValveObject);
-                        } 
-                        if (currentFlowRateFirst > 0 && !isValveOpenFirst)
-                        {
-                            // We can open the first valve, so we need all the permutations of open first valve + second person moves
-                            int pressureToRelease = (currentFlowRateFirst * (maximumMinutes - currentMinute));
-                            int NewmaximumPressureReleased = maximumPressureReleased + pressureToRelease;
-                            for (int i = 0; i < optionCountSecond; i++)
+                            if (y + 1 > arrayWidth - 1)
                             {
-                                string currentValveMovedToSecond = valvesTunnels[currentValveSecond][i];
-                                valveObject newValveObject = new valveObject(currentItem.openedValves + ":" + currentValveFirst, currentValveFirst, currentMinute + 1, NewmaximumPressureReleased, currentValveMovedToSecond);
-                                queue.Enqueue(newValveObject);
+                                // Time to remove the beam
+                                beamsCopy.Remove(beam.Key);
+                                continue;
                             }
-                        } 
-                        if (currentFlowRateSecond > 0 && !isValveOpenSecond)
-                        {
-                            // We can open the second valve, so we need all the permutations of open second valve + first person moves
-                            int pressureToRelease = (currentFlowRateSecond * (maximumMinutes - currentMinute));
-                            int NewmaximumPressureReleased = maximumPressureReleased + pressureToRelease;
-                            for (int i = 0; i < optionCountFirst; i++)
+                            destGridValue = grid[x, y + 1];
+                            int newY = y + 1;
+                            if (destGridValue == "." || destGridValue == "-")
                             {
-                                string currentValveMovedToFirst = valvesTunnels[currentValveFirst][i];
-                                valveObject newValveObject = new valveObject(currentItem.openedValves + ":" + currentValveSecond, currentValveMovedToFirst, currentMinute + 1, NewmaximumPressureReleased, currentValveSecond);
-                                queue.Enqueue(newValveObject);
+                                beamsCopy[beam.Key] = x + "," + newY + "," + direction;
+                            }
+                            else if (destGridValue == "/")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                            }
+                            else if (destGridValue == "\\")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "V";
+                            }
+                            else if (destGridValue == "|")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                                int newIndex = currentKey + 1;
+                                currentKey++;
+                                beamsCopy.Add(newIndex, x + "," + newY + "," + "V");
                             }
                         }
-
-                        for (int q = 0; q < optionCountFirst; q++)
+                        else if (direction == "<")
                         {
-                            for (int w = 0; w < optionCountSecond; w++)
+                            if (y - 1 < 0)
                             {
-                                string currentValveMovedToFirst = valvesTunnels[currentValveFirst][q];
-                                string copyOfValves = currentItem.openedValves;
-                                string currentValveMovedToSecond = valvesTunnels[currentValveSecond][w];
-                                valveObject newValveObject = new valveObject(copyOfValves, currentValveMovedToFirst, currentMinute + 1, maximumPressureReleased, currentValveMovedToSecond);
-                                queue.Enqueue(newValveObject);
+                                // Time to remove the beam
+                                beamsCopy.Remove(beam.Key);
+                                continue;
+                            }
+                            destGridValue = grid[x, y - 1];
+                            int newY = y - 1;
+                            if (destGridValue == "." || destGridValue == "-")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + direction;
+                            }
+                            else if (destGridValue == "/")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "V";
+                            }
+                            else if (destGridValue == "\\")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                            }
+                            else if (destGridValue == "|")
+                            {
+                                beamsCopy[beam.Key] = x + "," + newY + "," + "^";
+                                int newIndex = currentKey + 1;
+                                currentKey++;
+                                beamsCopy.Add(newIndex, x + "," + newY + "," + "V");
+                            }
+                        }
+                        else if (direction == "^")
+                        {
+                            if (x - 1 < 0)
+                            {
+                                // Time to remove the beam
+                                beamsCopy.Remove(beam.Key);
+                                continue;
+                            }
+                            destGridValue = grid[x - 1, y];
+                            int newX = x - 1;
+                            if (destGridValue == "." || destGridValue == "|")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + direction;
+                            }
+                            else if (destGridValue == "/")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                            }
+                            else if (destGridValue == "\\")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + "<";
+                            }
+                            else if (destGridValue == "-")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                                int newIndex = currentKey + 1;
+                                currentKey++;
+                                beamsCopy.Add(newIndex, newX + "," + y + "," + "<");
+                            }
+                        }
+                        else if (direction == "V")
+                        {
+                            if (x + 1 > arrayLength - 1)
+                            {
+                                // Time to remove the beam
+                                beamsCopy.Remove(beam.Key);
+                                continue;
+                            }
+                            destGridValue = grid[x + 1, y];
+                            int newX = x + 1;
+                            if (destGridValue == "." || destGridValue == "|")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + direction;
+                            }
+                            else if (destGridValue == "/")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + "<";
+                            }
+                            else if (destGridValue == "\\")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                            }
+                            else if (destGridValue == "-")
+                            {
+                                beamsCopy[beam.Key] = newX + "," + y + "," + ">";
+                                int newIndex = currentKey + 1;
+                                currentKey++;
+                                beamsCopy.Add(newIndex, newX + "," + y + "," + "<");
                             }
                         }
 
                     }
+                    //Console.WriteLine("got here");
+                    beamsIt.Clear();
+                    beamsIt = new Dictionary<int, string>(beamsCopy);
+                    beamsIt = beamsIt.GroupBy(pair => pair.Value)
+                         .Select(group => group.First())
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+                }
 
-                } while (queue.Count > 0);
-
-                Console.WriteLine("\nPart "+ puzzleParts[h] + ": Maximum Pressure Released over "+ minutes[h] + " minutes:" + pressureReleased+"\n");
+                energyTiles = energizedTilesIt.Count() - 1;
+                diffStartingBeams[mainBeam.Key] = energyTiles;
             }
+            // 1699 too low
+            // 7488
+            // 7495
+            // 7496 correct
+            int maxEnergyTiles = diffStartingBeams.Values.Max();
+
+            output += "\nPart B:" + maxEnergyTiles;
+
+
+
+
+
+
+        }
+
+        public string printGrid(int xSize, int ySize)
+        {
+            string output = "\nGrid:\n";
+
+            for (int x = 0; x < xSize; x++)
+            {
+                for (int y = 0; y < ySize; y++)
+                {
+                    string toWrite = grid[x, y];
+                    //System.Console.Write(toWrite);
+
+                    output += "" + toWrite;
+                }
+                //System.Console.Write("\n");
+                output += "\n";
+            }
+
+            return output;
+        }
+
+        public string[,] createGrid(string[,] grid, int xSize, int ySize)
+        {
+
+            for (int x = 0; x < xSize; x++)
+            {
+                for (int y = 0; y < ySize; y++)
+                {
+                    grid[x, y] = ".";
+                }
+            }
+
+            return grid;
         }
         public string output;
     }
 
-    public class valveObject
-    {
-        //public IDictionary<string, int> valves = new Dictionary<string, int>();
-        //public HashSet<string> openedValves = new HashSet<string>();
-        public string openedValves;
-        public string currentValue;
-        public string currentValueSecond;
-        public int currentMinute;
-        public int currentPressureReleased;
-        public valveObject(string valvesInput, string currentValveInput, int currentMinuteInput, int currentPressureReleasedInput, string currentValveSecondInput)
-        {
-            openedValves = valvesInput;
-            currentValue = currentValveInput;
-            currentValueSecond = currentValveSecondInput;
-            currentMinute = currentMinuteInput;
-            currentPressureReleased = currentPressureReleasedInput;
-        }
-        public override bool Equals(object? obj)
-        {
-            return Equals((valveObject) obj);
-        }
-        public bool Equals(valveObject y)
-        {
-            //if (Enumerable.SequenceEqual(openedValves,y.openedValves) && currentValue.Equals(y.currentValue) && currentMinute.Equals(y.currentMinute) && currentPressureReleased.Equals(y.currentPressureReleased))
-            if (openedValves.Equals(y.openedValves) && currentValue.Equals(y.currentValue) && currentMinute.Equals(y.currentMinute) && currentPressureReleased.Equals(y.currentPressureReleased) && currentValueSecond.Equals(y.currentValueSecond))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hash = 17;
-                hash = hash * 23 + (openedValves ?? "").GetHashCode();
-                hash = hash * 23 + (currentValue ?? "").GetHashCode();
-                hash = hash * 23 + (currentValueSecond ?? "").GetHashCode();
-                hash = hash * 23 + currentMinute.GetHashCode();
-                hash = hash * 23 + currentPressureReleased.GetHashCode();
-
-                return hash;
-            }
-        }
-
-    }
+    
 
 }
