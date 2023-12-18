@@ -27,11 +27,17 @@ namespace AoC2023.solution
 
             
             int horizontalReflectionRowsAbove = 0;
+            int horizontalReflectionRowsAboveTemp = 0;
             int verticalReflectionColumnsLeft = 0;
+            int verticalReflectionColumnsLeftTemp = 0;
             foreach (string data in grids)
             {
                 string[] lines = data.Split("\n");
+                lines[0] = lines[0].Replace("\r", "").Replace("\n", "");
 
+
+                verticalReflectionColumnsLeftTemp = 0;
+                horizontalReflectionRowsAboveTemp = 0;
                 arrayLength = lines.Count();
                 arrayWidth = lines[0].Length;
 
@@ -41,8 +47,12 @@ namespace AoC2023.solution
                 int column = 0;
                 foreach (string line in lines)
                 {
+                    line.Replace("\r", "").Replace("\n", "");
                     foreach (var character in line)
                     {
+                        if (character.ToString() == "\r") continue;
+                        if (character.ToString() == "\n") continue;
+                        //Console.WriteLine(character.ToString());
                         grid[row, column] = character.ToString();
                         column++;
                     }
@@ -51,7 +61,7 @@ namespace AoC2023.solution
                 }
 
                 bool isReflection = false;
-                for (int x = 1; x < arrayLength; x++)
+                for (int x = 0; x < arrayLength; x++)
                 {
                     isReflection = true;
                     int z = 1;
@@ -60,7 +70,7 @@ namespace AoC2023.solution
                     {
                         
                         // Check for reflection horizontal
-                        if ((x - z + 1 < 0) || (x + z >= arrayLength - 1))
+                        if ((x - z + 1 < 0) || (x + z >= arrayLength))
                         {
                             //Console.WriteLine("breaking");
                             break;
@@ -68,67 +78,71 @@ namespace AoC2023.solution
                         isReflection = false;
                         int lineBefore = (x - z) + 1;
                         int lineAfter = x + z;
-                        string lineComp1 = lines[lineBefore];
-                        string lineComp2 = lines[lineAfter];
+                        //string lineComp1 = lines[lineBefore].Replace("\r","").Replace("\n", "");
+                        //string lineComp2 = lines[lineAfter].Replace("\r", "").Replace("\n", "");
+                        string lineComp1 = "";
+                        string lineComp2 = "";
+                        for (int w = 0; w < arrayWidth; w++)
+                        {
+                            lineComp1 = lineComp1 + grid[lineBefore, w];
+                        }
+                        for (int w = 0; w < arrayWidth; w++)
+                        {
+                            lineComp2 = lineComp2 + grid[lineAfter, w];
+                        }
 
                         //Console.WriteLine("Checking lines "+ lineBefore+" and "+ lineAfter);
                         //Console.WriteLine(lineComp1);
                         //Console.WriteLine(lineComp2);
-                        //Console.WriteLine("Checking lines " + lineComp1 + " and " + lineComp2);
+                        //Console.WriteLine("Checking linesz ");
                         if (lineComp1 == lineComp2)
                         {
+                            //Console.WriteLine("got here"); 
                             reflectionRows++;
                             isReflection = true;
+                            
                         }
                         else
                         {
+                            //Console.WriteLine("got here wut");
                             isReflection = false;
                             break;
                         }
                         z++;
                     }
-                    if (isReflection == true && reflectionRows > 0)
+                    //Console.WriteLine(isReflection);
+                    if (isReflection == true && reflectionRows > 0 && (x + z == arrayLength))
                     {
                         reflectionRows = x + 1;
-                        Console.WriteLine("Reflection at line "+ x + " with row count of " + reflectionRows);
-                        
                         horizontalReflectionRowsAbove += reflectionRows;
+                        //horizontalReflectionRowsAboveTemp = 1;
+
+
+                        //if (reflectionRows > horizontalReflectionRowsAboveTemp && ((x - z + 1 == 0) || (x + z == arrayLength - 1)))
+                        if ((x - z + 1 == 0) || (x + z == arrayLength))
+                        {
+                            Console.WriteLine("Horizontal reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                            //horizontalReflectionRowsAboveTemp = reflectionRows;
+                            //horizontalReflectionRowsAbove += reflectionRows;
+
+                            //Console.WriteLine(horizontalReflectionRowsAboveTemp);
+                        }
                     }
 
                 }
 
 
 
-
+                if(horizontalReflectionRowsAboveTemp > 0)
+                {
+                    //continue;
+                }
 
                 //Vertical now. Rotating the grid first
-                string[] newLines = new string[arrayWidth];
-                row = 0;
-                column = 0;
-                foreach (string line in lines)
-                {
-                    foreach (var character in line)
-                    {
-                        int theID = arrayWidth - column - 1;
-                        if (newLines.ElementAtOrDefault(theID) !=null)
-                        {
-                            newLines[theID] = newLines[theID] + character.ToString();
-                        } else
-                        {
-                            newLines[theID] = character.ToString();
-                        }
-                        
-                        column++;
-                    }
-                    row++;
-                    column = 0;
-                }
-
-
 
 
                 isReflection = false;
-                for (int x = 1; x <= arrayWidth; x++)
+                for (int x = 0; x < arrayWidth; x++)
                 {
                     isReflection = true;
                     int z = 1;
@@ -137,7 +151,7 @@ namespace AoC2023.solution
                     {
 
                         // Check for reflection horizontal
-                        if ((x - z + 1 < 0) || (x + z >= arrayWidth - 1))
+                        if ((x - z + 1 < 0) || (x + z >= arrayWidth))
                         {
                             //Console.WriteLine("breaking");
                             break;
@@ -145,13 +159,22 @@ namespace AoC2023.solution
                         isReflection = false;
                         int lineBefore = (x - z) + 1;
                         int lineAfter = x + z;
-                        string lineComp1 = newLines[lineBefore];
-                        string lineComp2 = newLines[lineAfter];
+                        string lineComp1 = "";
+                        string lineComp2 = "";
+                        for (int w = 0; w < arrayLength; w++)
+                        {
+                            lineComp1 = lineComp1 + grid[w, lineBefore];
+                        }
+                        for (int w = 0; w < arrayLength; w++)
+                        {
+                            lineComp2 = lineComp2 + grid[w, lineAfter];
+                        }
 
-                        Console.WriteLine("Checking lines "+ lineBefore+" and "+ lineAfter);
-                        Console.WriteLine(lineComp1);
-                        Console.WriteLine(lineComp2);
-                        Console.WriteLine("Checking lines " + lineComp1 + " and " + lineComp2);
+                        //Console.WriteLine("Checking lines " + lineBefore + " and " + lineAfter);
+                        //Console.WriteLine(arrayWidth);
+                        //Console.WriteLine(lineComp1);
+                        //Console.WriteLine(lineComp2);
+                        //Console.WriteLine("Checking linesz ");
                         if (lineComp1 == lineComp2)
                         {
                             reflectionRows++;
@@ -164,15 +187,28 @@ namespace AoC2023.solution
                         }
                         z++;
                     }
-                    if (isReflection == true && reflectionRows > 0)
+                    if (isReflection == true && reflectionRows > 0 && (x + z == arrayWidth))
                     {
                         reflectionRows = x + 1;
-                        //reflectionRows = arrayWidth - x - 1;
-                        //Console.WriteLine("Reflection at line " + x + " with row count of " + reflectionRows);
+                        //reflectionRows = arrayLength - x;
+                        
                         verticalReflectionColumnsLeft += reflectionRows;
+                        //if (reflectionRows > verticalReflectionColumnsLeftTemp && ((x - z + 1 == 0) || (x + z == arrayWidth - 1)))
+                        if ((x - z + 1 == 0) || (x + z == arrayWidth))
+                        {
+                            Console.WriteLine("Vertical reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                            //verticalReflectionColumnsLeftTemp = reflectionRows;
+                            //Console.WriteLine(verticalReflectionColumnsLeftTemp);
+                            //verticalReflectionColumnsLeft += reflectionRows;
+                        }
                     }
 
                 }
+                //horizontalReflectionRowsAbove += horizontalReflectionRowsAboveTemp;
+                //verticalReflectionColumnsLeft += verticalReflectionColumnsLeftTemp;
+                Console.WriteLine("MOVIN ON");
+                Console.WriteLine(horizontalReflectionRowsAbove);
+                Console.WriteLine(verticalReflectionColumnsLeft);
 
 
             }
@@ -189,6 +225,8 @@ namespace AoC2023.solution
             // too high 34326
             // too high 34267
             // wrong 34186
+            // wrong 31735
+            // wrong 27677
             // 33735
 
 
