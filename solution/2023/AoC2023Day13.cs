@@ -17,6 +17,7 @@ namespace AoC2023.solution
         public string[,] gridTemp;
         int arrayLength = 0;
         int arrayWidth = 0;
+        Dictionary<int, int> reflectionLines = new Dictionary<int, int>();
 
         public AoCDay13(int selectedPart, string input)
         {
@@ -25,8 +26,12 @@ namespace AoC2023.solution
             int horizontalReflectionRowsAboveSecond = 0;
             int verticalReflectionColumnsLeft = 0;
             int verticalReflectionColumnsLeftSecond = 0;
+            int gridIndex = 0;
+            //Console.WriteLine(grids[61]);
+            Console.WriteLine(grids[0]);
             foreach (string data in grids)
             {
+
                 string[] lines = data.Split("\n");
                 lines[0] = lines[0].Replace("\r", "").Replace("\n", "");
 
@@ -98,7 +103,8 @@ namespace AoC2023.solution
                     {
                         reflectionRows = x + 1;
                         horizontalReflectionRowsAbove += reflectionRows;
-                        Console.WriteLine("Horizontal reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                        reflectionLines.Add(gridIndex, x);
+                        //Console.WriteLine("Horizontal reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
                         break;
                     }
 
@@ -123,6 +129,8 @@ namespace AoC2023.solution
                         int lineAfter = x + z;
                         string lineComp1 = "";
                         string lineComp2 = "";
+
+                        //Console.WriteLine(lineBefore + " - " + lineAfter);
                         for (int w = 0; w < arrayLength; w++)
                         {
                             lineComp1 = lineComp1 + grid[w, lineBefore];
@@ -153,15 +161,16 @@ namespace AoC2023.solution
                     {
                         reflectionRows = x + 1;                        
                         verticalReflectionColumnsLeft += reflectionRows;
-                        Console.WriteLine("Vertical reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                        reflectionLines.Add(gridIndex, x);
+                        //Console.WriteLine("Vertical reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
                         break;
                     }
 
                 }
 
-
+                gridIndex++;
             }
-
+            gridIndex = 0;
             string outputGrid = printGrid(arrayLength, arrayWidth);
             output += outputGrid;
 
@@ -204,14 +213,14 @@ namespace AoC2023.solution
                 {
                     if (isReflection == true)
                     {
-                        Console.WriteLine("wut1"); 
+                        //Console.WriteLine("wut1"); 
                         break;
                     }
                     for (int b = 0; b < arrayWidth; b++)
                     {
                         if (isReflection == true)
                         {
-                            Console.WriteLine("wut");
+                            //Console.WriteLine("wut");
                             break;
                         }
                         //
@@ -219,7 +228,9 @@ namespace AoC2023.solution
 
                         
                         for (int x = arrayLength - 1; x >= -1; x--)
+                        //for (int x = 0; x < arrayLength; x++)
                         {
+
                             isReflection = false;
                             int z = 1;
                             int reflectionRows = 0;
@@ -230,13 +241,14 @@ namespace AoC2023.solution
                                 int lineAfter = x + z;
                                 string lineComp1 = "";
                                 string lineComp2 = "";
+                                //Console.WriteLine(lineBefore + " - " + lineAfter);
                                 for (int w = 0; w < arrayWidth; w++)
                                 {
                                     if(a==lineBefore && b == w)
                                     {
-                                        Console.WriteLine("got here3");
-                                        //lineComp1 = lineComp1 + (grid[lineBefore, w] == "." ? "#": ".");
-                                        lineComp1 = lineComp1 + grid[lineBefore, w];
+                                        //Console.WriteLine("got here3");
+                                        lineComp1 = lineComp1 + (grid[lineBefore, w] == "." ? "#": ".");
+                                        //lineComp1 = lineComp1 + grid[lineBefore, w];
                                     } else
                                     {
                                         lineComp1 = lineComp1 + grid[lineBefore, w];
@@ -247,9 +259,9 @@ namespace AoC2023.solution
                                 {
                                     if (a == lineAfter && b == w)
                                     {
-                                        Console.WriteLine("got here4");
-                                        //lineComp2 = lineComp2 + (grid[lineAfter, w] == "." ? "#" : ".");
-                                        lineComp2 = lineComp2 + grid[lineAfter, w];
+                                        //Console.WriteLine("got here4");
+                                        lineComp2 = lineComp2 + (grid[lineAfter, w] == "." ? "#" : ".");
+                                        //lineComp2 = lineComp2 + grid[lineAfter, w];
                                     }
                                     else
                                     {
@@ -276,23 +288,30 @@ namespace AoC2023.solution
                                 }
                                 z++;
                             }
+                            if(reflectionLines[gridIndex] == x)
+                            {
+                                //isReflection = false;
+                            }
                             //Console.WriteLine(isReflection);
-                            if (isReflection == true)
+                            if (isReflection == true && reflectionLines[gridIndex] != x)
                             {
                                 reflectionRows = x + 1;
                                 horizontalReflectionRowsAboveSecond += reflectionRows;
-                                Console.WriteLine("Horizontal reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                                Console.WriteLine("Horizontal reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength + " at the grid index "+ gridIndex);
                                 break;
                             }
 
                         }
                         if (isReflection == true)
                         {
-                            //break;
+                            //Console.WriteLine("wuthere");
+                            break;
                         }
 
                         isReflection = false;
+
                         for (int x = arrayWidth - 1; x >= -1; x--)
+                        //for (int x = 0; x < arrayWidth; x++)
                         {
                             isReflection = false;
                             int z = 1;
@@ -301,22 +320,20 @@ namespace AoC2023.solution
                             {
 
                                 // Check for reflection horizontal
-                                if ((x - z + 1 < 0) || (x + z >= arrayWidth))
-                                {
-                                    break;
-                                }
+
                                 int lineBefore = (x - z) + 1;
                                 int lineAfter = x + z;
                                 string lineComp1 = "";
                                 string lineComp2 = "";
 
+                                //Console.WriteLine(lineBefore + " - " + lineAfter);
                                 for (int w = 0; w < arrayLength; w++)
                                 {
                                     if (a == w && b == lineBefore)
                                     {
-                                        Console.WriteLine("got here2");
-                                        //lineComp1 = lineComp1 + (grid[w, lineBefore] == "." ? "#" : ".");
-                                        lineComp1 = lineComp1 + grid[w, lineBefore];
+                                        //Console.WriteLine("got here2");
+                                        lineComp1 = lineComp1 + (grid[w, lineBefore] == "." ? "#" : ".");
+                                        //lineComp1 = lineComp1 + grid[w, lineBefore];
                                     }
                                     else
                                     {
@@ -328,9 +345,9 @@ namespace AoC2023.solution
                                 {
                                     if (a == w && b == lineAfter)
                                     {
-                                        Console.WriteLine("got here1");
-                                        //lineComp2 = lineComp2 + (grid[w, lineAfter] == "." ? "#" : ".");
-                                        lineComp2 = lineComp2 + grid[w, lineAfter];
+                                        //Console.WriteLine("got here1");
+                                        lineComp2 = lineComp2 + (grid[w, lineAfter] == "." ? "#" : ".");
+                                        //lineComp2 = lineComp2 + grid[w, lineAfter];
                                     }
                                     else
                                     {
@@ -356,23 +373,29 @@ namespace AoC2023.solution
                                 }
                                 z++;
                             }
-                            if (isReflection == true)
+                            if (reflectionLines[gridIndex] == x)
+                            {
+                                //isReflection = false;
+                            }
+                            if (isReflection == true && reflectionLines[gridIndex] != x)
                             {
                                 reflectionRows = x + 1;
                                 verticalReflectionColumnsLeftSecond += reflectionRows;
-                                Console.WriteLine("Vertical reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength);
+                                Console.WriteLine("Vertical reflection at line " + x + " with row count of " + reflectionRows + " with a max rows of " + arrayLength + " at the grid index " + gridIndex);
                                 break;
-                            }
+                            } 
 
                         }
                         if (isReflection == true)
                         {
-                            //break;
+                            Console.WriteLine("ogt here");
+                            break;
                         }
                     }
                 }
-                
 
+                gridIndex++;
+                Console.WriteLine("Moving on");
 
             }
 
@@ -381,7 +404,10 @@ namespace AoC2023.solution
 
 
 
-
+            // 37863 too low
+            // 37864 too low
+            // 37865 too low
+            // correct 38063 but not done automatically
 
             return;
             /*for (int x = 0; x < xSize; x++)
@@ -439,7 +465,7 @@ namespace AoC2023.solution
             // wrong 31735
             // wrong 27677
             // 33675
-            // 33735
+            // 33735 correct
             // 33666
 
 
