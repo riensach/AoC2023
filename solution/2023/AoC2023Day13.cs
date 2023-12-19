@@ -166,9 +166,6 @@ namespace AoC2023.solution
                     }
 
                 }
-                Console.WriteLine("MOVIN ON");
-                Console.WriteLine(horizontalReflectionRowsAbove);
-                Console.WriteLine(verticalReflectionColumnsLeft);
 
 
             }
