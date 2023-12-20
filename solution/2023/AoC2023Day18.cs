@@ -3,428 +3,347 @@ using System.IO;
 using System.Diagnostics;
 using LoreSoft.MathExpressions;
 using System.Threading;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.RegularExpressions;
+using static AoC2023.solution.AoCDay10;
+using System.Diagnostics.Metrics;
+using System.Data.SqlTypes;
+using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace AoC2023.solution
 {
     public class AoCDay18
     {
         public List<string> cubes = new List<string>();
-        public int maximumX = 0;
-        public int maximumY = 0;
-        public int maximumZ = 0;
-        public int minimumX = 1000;
-        public int minimumY = 1000;
-        public int minimumZ = 1000;
-        public AoCDay18(int selectedPart, string input)
+        public int startingX = 200;
+        public int startingY = 100;
+        public int arrayLength = 500;
+        public int arrayWidth = 500;
+
+        public string[,] grid;
+        public string[,] gridTemp;
+        
+
+        public void test(string input)
         {
-            string[] lines = input.Split(
-                new string[] { Environment.NewLine },
-                StringSplitOptions.None
-            );
+            //TEST
+            startingX = 20;
+            startingY = 10;
+            arrayLength = 50;
+            arrayWidth = 50;
+            partA(input);
+        }
 
-            int exposedSurfaces = 0;          
+        public void partA(string input)
+        {
+            string[] lines = input.Split("\n");       
 
+            grid = new string[arrayLength, arrayWidth];
+            grid = createGrid(grid, arrayLength, arrayWidth);
+
+            Map maps = new Map(grid, arrayLength, arrayWidth);
+            grid[startingX, startingY] = "#";
+
+            int currentX = startingX;
+            int currentY = startingY;
+            int totalMovementSteps = 0;
             foreach (string line in lines)
             {
-                string[] parts = line.Split(",");
-                int cubeX = int.Parse(parts[0]);
-                int cubeY = int.Parse(parts[1]);
-                int cubeZ = int.Parse(parts[2]);
-                cubes.Add(cubeX + "," + cubeY + "," + cubeZ);
-                if(cubeX > maximumX)
-                {
-                    maximumX = cubeX;
-                }
-                if (cubeY > maximumY)
-                {
-                    maximumY = cubeY;
-                }
-                if (cubeZ > maximumZ)
-                {
-                    maximumZ = cubeZ;
-                }
-                if (cubeX < minimumX)
-                {
-                    minimumX = cubeX;
-                }
-                if (cubeY < minimumY)
-                {
-                    minimumY = cubeY;
-                }
-                if (cubeZ < minimumZ)
-                {
-                    minimumZ = cubeZ;
-                }
-            }
-            Console.WriteLine(maximumX + "," + maximumY + "," + maximumZ + " : " + minimumX + "," + minimumY + "," + minimumZ);
+                line.Replace("\r", "").Replace("\n", "");
+                // 
+                string pattern = @"([U|D|R|L])[ ]([0-9]+)[ ][(]([#][a-zA-Z0-9]+)[)]";
+                Regex rg = new Regex(pattern);
+                string updatedString = new string(line);
+                MatchCollection matchedWords = rg.Matches(updatedString);
+                string movementDirection = matchedWords[0].Groups[1].Value;
+                int movementAmount = int.Parse(matchedWords[0].Groups[2].Value);
+                string rgbColor = matchedWords[0].Groups[3].Value;
 
-            foreach (string cube in cubes)
-            {
-                string[] cubeParts = cube.Split(",");
-                int cubeX = int.Parse(cubeParts[0]);
-                int cubeY = int.Parse(cubeParts[1]);
-                int cubeZ = int.Parse(cubeParts[2]);
-                int sidesExposed = exposedSides(cubeX, cubeY, cubeZ);
-
-                if (sidesExposed > 0)
+                if (movementDirection == "D")
                 {
-                    exposedSurfaces = exposedSurfaces + sidesExposed;
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX + x, currentY] = "#";
+                    }
+                    currentX = currentX + movementAmount;
                 }
-            }
-
-            output = "Part A: " + exposedSurfaces;
-
-            int exposedExternalSurfaces = 0;
-            int iterator = 0;
-            foreach (string cube in cubes)
-            {
-                string[] cubeParts = cube.Split(",");
-                int cubeX = int.Parse(cubeParts[0]);
-                int cubeY = int.Parse(cubeParts[1]);
-                int cubeZ = int.Parse(cubeParts[2]);
-                Console.WriteLine("Checking cube for exposed sides iterator " + iterator);
-                int sidesExposed = exposedSidesNotTrapped(cubeX, cubeY, cubeZ);
-
-                if (sidesExposed > 0)
+                else if (movementDirection == "U")
                 {
-                    exposedExternalSurfaces = exposedExternalSurfaces + sidesExposed;
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX - x, currentY] = "#";
+                    }
+                    currentX = currentX - movementAmount;
                 }
-                iterator++;
+                else if (movementDirection == "L")
+                {
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX, currentY - x] = "#";
+                    }
+                    currentY = currentY - movementAmount;
+                }
+                else if (movementDirection == "R")
+                {
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX, currentY + x] = "#";
+                    }
+                    currentY = currentY + movementAmount;
+                }
+                totalMovementSteps = totalMovementSteps + movementAmount;
             }
 
-            output += "\nPart B: " + exposedExternalSurfaces;
+            long countSquares = 0;
+            var startingLocation = new Position(startingX + 1, startingY + 1);
+            Console.WriteLine(startingLocation);
+            HashSet<Position> visitedLocations = new HashSet<Position>();
+            var explorerInfo = new Explorer(startingLocation, visitedLocations);
+            countSquares = findThePath(maps, explorerInfo);
+            long finalCalt = (totalMovementSteps) + (countSquares);
 
-            // 3292 = too high
-
-
+            output += "\nPart A: " + finalCalt;
         }
-        public int exposedSidesNotTrapped(int x, int y, int z)
+
+        public void partB(string input)
         {
-            int sidesExposed = 0;
-            int cubeX = x;
-            int cubeY = y;
-            int cubeZ = z;
-            bool exposedAbove = true;
-            bool exposedBelow = true;
-            bool exposedLeft = true;
-            bool exposedRight = true;
-            bool exposedFront = true;
-            bool exposedBack = true;
-            foreach (string cubeCompare in cubes)
-            {
+            string[] lines = input.Split("\n");
 
-                string[] cubeCompareParts = cubeCompare.Split(",");
-                int cubeCompareX = int.Parse(cubeCompareParts[0]);
-                int cubeCompareY = int.Parse(cubeCompareParts[1]);
-                int cubeCompareZ = int.Parse(cubeCompareParts[2]);
+            startingX = 20000;
+            startingY = 10000;
+            arrayLength = 50000;
+            arrayWidth = 50000;
 
-                // Check exposed front
-                if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ - 1 == cubeCompareZ)
-                {
-                    exposedFront = false;
-                }
-                // Check exposed back
-                if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ + 1 == cubeCompareZ)
-                {
-                    exposedBack = false;
-                }
-                // Check exposed Left
-                if (cubeX == cubeCompareX && cubeY - 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedLeft = false;
-                }
-                // Check exposed Right
-                if (cubeX == cubeCompareX && cubeY + 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedRight = false;
-                }
-                // Check exposed above
-                if (cubeX - 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedAbove = false;
-                }
-                // Check exposed below
-                if (cubeX + 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedBelow = false;
-                }
-            }
-            if (exposedAbove == true)
+            grid = new string[arrayLength, arrayWidth];
+            grid = createGrid(grid, arrayLength, arrayWidth);
+
+            Map maps = new Map(grid, arrayLength, arrayWidth);
+            grid[startingX, startingY] = "#";
+
+            int currentX = startingX;
+            int currentY = startingY;
+            int totalMovementSteps = 0;
+            foreach (string line in lines)
             {
-                bool exposed = canWaterGetHere(cubeX - 1, cubeY, cubeZ);
-                if(exposed)
+                line.Replace("\r", "").Replace("\n", "");
+                // 
+                string pattern = @"([U|D|R|L])[ ]([0-9]+)[ ][(][#]([a-zA-Z0-9]+)[)]";
+                Regex rg = new Regex(pattern);
+                string updatedString = new string(line);
+                MatchCollection matchedWords = rg.Matches(updatedString);
+                string rgbColor = matchedWords[0].Groups[3].Value;
+                char[] parts = rgbColor.ToCharArray();
+                string movementCode = rgbColor.Substring(5, 1);
+                string movementAmountString = rgbColor.Substring(0, 5);
+                string movementDirection = "";
+                if (int.Parse(movementCode) == 0)
                 {
-                    sidesExposed++;
-                }
-                
-            }
-            if (exposedBelow == true)
-            {
-                bool exposed = canWaterGetHere(cubeX + 1, cubeY, cubeZ);
-                if (exposed)
+                    movementDirection = "R";
+                } else if (int.Parse(movementCode) == 1)
                 {
-                    sidesExposed++;
+                    movementDirection = "D";
                 }
-            }
-            if (exposedLeft == true)
-            {
-                bool exposed = canWaterGetHere(cubeX, cubeY - 1, cubeZ);
-                if (exposed)
+                else if (int.Parse(movementCode) == 2)
                 {
-                    sidesExposed++;
+                    movementDirection = "L";
                 }
-            }
-            if (exposedRight == true)
-            {
-                bool exposed = canWaterGetHere(cubeX, cubeY + 1, cubeZ);
-                if (exposed)
+                else if (int.Parse(movementCode) == 3)
                 {
-                    sidesExposed++;
+                    movementDirection = "U";
                 }
-            }
-            if (exposedFront == true)
-            {
-                bool exposed = canWaterGetHere(cubeX, cubeY, cubeZ - 1);
-                if (exposed)
+
+                int movementAmount = Convert.ToInt32(movementAmountString, 16);
+
+                Console.WriteLine(movementDirection + " - " + movementAmount);
+                continue;
+
+
+                if (movementDirection == "D")
                 {
-                    sidesExposed++;
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX + x, currentY] = "#";
+                    }
+                    currentX = currentX + movementAmount;
                 }
-            }
-            if (exposedBack == true)
-            {
-                bool exposed = canWaterGetHere(cubeX, cubeY, cubeZ + 1);
-                if (exposed)
+                else if (movementDirection == "U")
                 {
-                    sidesExposed++;
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX - x, currentY] = "#";
+                    }
+                    currentX = currentX - movementAmount;
                 }
+                else if (movementDirection == "L")
+                {
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX, currentY - x] = "#";
+                    }
+                    currentY = currentY - movementAmount;
+                }
+                else if (movementDirection == "R")
+                {
+                    for (int x = 0; x < movementAmount; x++)
+                    {
+                        grid[currentX, currentY + x] = "#";
+                    }
+                    currentY = currentY + movementAmount;
+                }
+                totalMovementSteps = totalMovementSteps + movementAmount;
             }
-            return sidesExposed;
+
+
+            long countSquares = 0;
+            var startingLocation = new Position(startingX + 1, startingY + 1);
+            Console.WriteLine(startingLocation);
+            HashSet<Position> visitedLocations = new HashSet<Position>();
+            var explorerInfo = new Explorer(startingLocation, visitedLocations);
+            countSquares = findThePath(maps, explorerInfo);
+            long finalCalt = (totalMovementSteps) + (countSquares);
+
+            output += "\nPart B: " + finalCalt;
         }
-        public bool canWaterGetHere(int x, int y, int z)
+
+        public AoCDay18(int selectedPart, string input)
         {
-            string startingQueue = x+","+y+","+z;
-            List<string> cubesChecked = new List<string>();
-            cubesChecked.Add(startingQueue);
-            Queue<string> queue = new Queue<string>();
-            queue.Enqueue(startingQueue);
-            do
-            {
-                string currentItem = queue.Dequeue();
-                string[] cubeParts = currentItem.Split(",");
-                int cubeX = int.Parse(cubeParts[0]);
-                int cubeY = int.Parse(cubeParts[1]);
-                int cubeZ = int.Parse(cubeParts[2]);
-                bool exposedAbove = true;
-                bool exposedBelow = true;
-                bool exposedLeft = true;
-                bool exposedRight = true;
-                bool exposedFront = true;
-                bool exposedBack = true;
-                foreach (string cubeCompare in cubes)
-                {
-                    string[] cubeCompareParts = cubeCompare.Split(",");
-                    int cubeCompareX = int.Parse(cubeCompareParts[0]);
-                    int cubeCompareY = int.Parse(cubeCompareParts[1]);
-                    int cubeCompareZ = int.Parse(cubeCompareParts[2]);
+            test(input);
+            partA(input);
+            partB(input);
+           
 
-                    // Check exposed front
-                    if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ - 1 == cubeCompareZ)
-                    {
-                        exposedFront = false;
-                    }
-                    // Check exposed back
-                    if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ + 1 == cubeCompareZ)
-                    {
-                        exposedBack = false;
-                    }
-                    // Check exposed Left
-                    if (cubeX == cubeCompareX && cubeY - 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                    {
-                        exposedLeft = false;
-                    }
-                    // Check exposed Right
-                    if (cubeX == cubeCompareX && cubeY + 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                    {
-                        exposedRight = false;
-                    }
-                    // Check exposed above
-                    if (cubeX - 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                    {
-                        exposedAbove = false;
-                    }
-                    // Check exposed below
-                    if (cubeX + 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                    {
-                        exposedBelow = false;
-                    }
-                }
-                if (exposedAbove == true && (cubeX - 1) > minimumX)
-                {
-                    string newCubeToCheck = (cubeX - 1) + "," + cubeY + "," + cubeZ;
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                } else if (exposedAbove == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                if (exposedBelow == true && (cubeX + 1) < maximumX)
-                {
-                    string newCubeToCheck = (cubeX + 1) + "," + cubeY + "," + cubeZ;
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                }
-                else if (exposedBelow == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                if (exposedLeft == true && (cubeY - 1) > minimumY)
-                {
-                    string newCubeToCheck = cubeX + "," + (cubeY -1) + "," + cubeZ;
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                }
-                else if (exposedLeft == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                if (exposedRight == true && (cubeY + 1) < maximumY)
-                {
-                    string newCubeToCheck = cubeX + "," + (cubeY + 1) + "," + cubeZ;
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                }
-                else if (exposedRight == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                if (exposedFront == true && (cubeZ - 1) > minimumZ)
-                {
-                    string newCubeToCheck = cubeX + "," + cubeY + "," + (cubeZ - 1);
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                }
-                else if (exposedFront == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                if (exposedBack == true && (cubeZ + 1) < maximumZ)
-                {
-                    string newCubeToCheck = cubeX + "," + cubeY + "," + (cubeZ + 1);
-                    if (!cubesChecked.Contains(newCubeToCheck))
-                    {
-                        queue.Enqueue(newCubeToCheck);
-                        cubesChecked.Add(newCubeToCheck);
-                    }
-                }
-                else if (exposedBack == true)
-                {
-                    // Water can get here
-                    return true;
-                }
-                //Console.WriteLine(queue.Count);
-            } while (queue.Count > 0);
-
-            return false;
         }
-            public int exposedSides(int x, int y, int z)
+        public class Map
         {
-            int sidesExposed = 0;
-            int cubeX = x;
-            int cubeY = y;
-            int cubeZ = z;
-            bool exposedAbove = true;
-            bool exposedBelow = true;
-            bool exposedLeft = true;
-            bool exposedRight = true;
-            bool exposedFront = true;
-            bool exposedBack = true;
-            foreach (string cubeCompare in cubes)
+            public string[,] mapLines;
+            public readonly int width;
+            public readonly int length;
+            public Map(string[,] input, int lengthInput, int widthInput)
             {
-
-                string[] cubeCompareParts = cubeCompare.Split(",");
-                int cubeCompareX = int.Parse(cubeCompareParts[0]);
-                int cubeCompareY = int.Parse(cubeCompareParts[1]);
-                int cubeCompareZ = int.Parse(cubeCompareParts[2]);
-
-                // Check exposed front
-                if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ - 1 == cubeCompareZ)
-                {
-                    exposedFront = false;
-                }
-                // Check exposed back
-                if (cubeX == cubeCompareX && cubeY == cubeCompareY && cubeZ + 1 == cubeCompareZ)
-                {
-                    exposedBack = false;
-                }
-                // Check exposed Left
-                if (cubeX == cubeCompareX && cubeY - 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedLeft = false;
-                }
-                // Check exposed Right
-                if (cubeX == cubeCompareX && cubeY + 1 == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedRight = false;
-                }
-                // Check exposed above
-                if (cubeX - 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedAbove = false;
-                }
-                // Check exposed below
-                if (cubeX + 1 == cubeCompareX && cubeY == cubeCompareY && cubeZ == cubeCompareZ)
-                {
-                    exposedBelow = false;
-                }
-            }
-            if (exposedAbove == true)
-            {
-                sidesExposed++;
-            }
-            if (exposedBelow == true)
-            {
-                sidesExposed++;
-            }
-            if (exposedLeft == true)
-            {
-                sidesExposed++;
-            }
-            if (exposedRight == true)
-            {
-                sidesExposed++;
-            }
-            if (exposedFront == true)
-            {
-                sidesExposed++;
-            }
-            if (exposedBack == true)
-            {
-                sidesExposed++;
+                mapLines = input;
+                length = lengthInput;
+                width = widthInput;
             }
 
-            return sidesExposed;
+            public string getGridState(Position position)
+            {
+                //if (position.x < 0 || position.y < 0 || position.x >= mapLines.Length || position.y >= mapLines[0].Length) return '.';
+                return mapLines[position.x,position.y];
+
+            }
+        }
+        public long findThePath(Map map, Explorer explorerInformation)
+        {
+            long totalFoundSquares = 0;
+            var queue = new PriorityQueue<Explorer, int>();
+
+            queue.Enqueue(explorerInformation, 1);
+            HashSet<Explorer> previousExplorers = new HashSet<Explorer>();
+
+            while (queue.Count > 0)
+            {
+                //Console.WriteLine("got here");
+                var explorer = queue.Dequeue();
+
+                //Console.WriteLine("got here2");
+                foreach (Explorer explorerOption in movementOptions(explorer, map))
+                {
+                    explorerOption.visitedLocations.Add(explorerOption.position);
+                    //Console.WriteLine("got here3");
+                    if (!previousExplorers.Contains(explorerOption))
+                    {
+                        previousExplorers.Add(explorerOption);
+                        queue.Enqueue(explorerOption, 1);
+                        totalFoundSquares++;
+                    }
+                }
+            }
+            return totalFoundSquares;
         }
 
+
+        IEnumerable<Explorer> movementOptions(Explorer explorer, Map map)
+        {
+            // Check South
+            Position southOption = new Position(explorer.position.x + 1, explorer.position.y);
+            if (map.getGridState(southOption) == "." && !explorer.visitedLocations.Contains(southOption))
+            {
+                yield return explorer with
+                {
+                    position = southOption,
+                };
+            }
+
+            // Check North
+            Position northOption = new Position(explorer.position.x - 1, explorer.position.y);
+            if (map.getGridState(northOption) == "." && !explorer.visitedLocations.Contains(northOption))
+            {
+                yield return explorer with
+                {
+                    position = northOption,
+                };
+            }
+
+            // Check East
+            Position eastOption = new Position(explorer.position.x, explorer.position.y + 1);
+            if (map.getGridState(eastOption) == "." && !explorer.visitedLocations.Contains(eastOption))
+            {
+                yield return explorer with
+                {
+                    position = eastOption,
+                };
+            }
+
+            // Check West
+            Position westOption = new Position(explorer.position.x, explorer.position.y - 1);
+            if (map.getGridState(westOption) == "." && !explorer.visitedLocations.Contains(westOption))
+            {
+                yield return explorer with
+                {
+                    position = westOption,
+                };
+            }
+
+        }
+
+        public record Explorer(Position position, HashSet<Position> visitedLocations);
+
+        public record Position(int x, int y);
+
+        public string printGrid(int xSize, int ySize)
+        {
+            string output = "\nGrid:\n";
+
+            for (int x = 0; x < xSize; x++)
+            {
+                for (int y = 0; y < ySize; y++)
+                {
+                    string toWrite = grid[x, y];
+                    System.Console.Write(toWrite);
+
+                    //output += "" + toWrite;
+                }
+                System.Console.Write("\n");
+                //output += "\n";
+            }
+
+            return output;
+        }
+
+        public string[,] createGrid(string[,] grid, int xSize, int ySize)
+        {
+
+            for (int x = 0; x < xSize; x++)
+            {
+                for (int y = 0; y < ySize; y++)
+                {
+                    grid[x, y] = ".";
+                }
+            }
+
+            return grid;
+        }
         public string output;
     }
 }

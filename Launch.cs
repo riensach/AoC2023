@@ -16,7 +16,7 @@ namespace AdventofCode2023
             Console.WriteLine("------------------------\n");
 
 
-            int daySelection = 19;
+            int daySelection = 18;
             int yearSelection = 2023;
             int partSelection = 1;
 
